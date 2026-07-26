@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LKA 全功能家用醫療管理系統 Web App</title>
+    <style>
+        :root {
+            --bg-warm-apricot: #FDF8F4;
+            --card-bg: #FFFFFF;
+            --primary-amber: #D97706;
+            --primary-light: #FEF3C7;
+            --text-earth-dark: #451A03;
+            --text-earth-muted: #78350F;
+            --border-warm: #F3E8EE;
+            
+            --success-bg: #D1FAE5;
+            --success-text: #059669;
+            --warning-bg: #FEF3C7;
+            --warning-text: #D97706;
+            --danger-bg: #FEE2E2;
+            --danger-text: #DC2626;
+            --info-bg: #E0F2FE;
+            --info-text: #0369A1;
+
+            --radius-card: 20px;
+            --radius-pill: 30px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-warm-apricot);
+            color: var(--text-earth-dark);
+            padding: 20px 16px 125px 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 4px 8px;
+            width: 100%;
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-brand .logo {
+            font-size: 24px;
+        }
+
+        .app-brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-earth-dark);
+        }
+
+        .btn-capsule {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--primary-amber);
+            color: var(--primary-amber);
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.05);
+            white-space: nowrap;
+        }
+
+        .btn-capsule.active, .btn-capsule.btn-primary {
+            background-color: var(--primary-amber);
+            color: #FFFFFF;
+        }
+
+        .btn-capsule.btn-secondary {
+            background-color: #F5EBE6;
+            border-color: #E6D5CC;
+            color: var(--text-earth-muted);
+        }
+
+        .btn-capsule.btn-danger {
+            background-color: var(--danger-bg);
+            border-color: #FCA5A5;
+            color: var(--danger-text);
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .btn-capsule.btn-edit {
+            background-color: var(--info-bg);
+            border-color: #7DD3FC;
+            color: var(--info-text);
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .privacy-sensitive {
+            transition: var(--transition-smooth);
+        }
+
+        body.privacy-mode .privacy-sensitive {
+            filter: blur(6px);
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .spa-page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .spa-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .med-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-warm);
+            box-shadow: 0 4px 16px rgba(69, 26, 3, 0.03);
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-earth-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            background: #FDFBF7;
+            padding: 12px;
+            border-radius: 14px;
+            border-left: 4px solid var(--primary-amber);
+            text-align: center;
+        }
+        .stat-card.alert-card { 
+            border-left-color: var(--primary-amber); 
+            background: #FFFBEB; 
+        }
+        .stat-card-title { font-size: 11px; color: var(--text-earth-muted); font-weight: 600; }
+        .stat-card-value { font-size: 18px; font-weight: 700; color: var(--text-earth-dark); margin-top: 4px; }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-warm);
+            border-radius: 14px;
+            background: var(--card-bg);
+            margin-top: 10px;
+            margin-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background: #FAF2EC;
+            color: var(--text-earth-dark);
+            font-weight: 700;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-warm);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #F5EBE6;
+            color: var(--text-earth-dark);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .badge-success { background: var(--success-bg); color: var(--success-text); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .badge-danger { background: var(--danger-bg); color: var(--danger-text); }
+        .badge-info { background: var(--info-bg); color: var(--info-text); }
+        .badge-muted { background: #E2E8F0; color: #64748B; }
+
+        .filter-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-section select {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-warm);
+            background-color: var(--card-bg);
+            color: var(--text-earth-dark);
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .backup-section {
+            background: #FDFBF7;
+            border: 1px dashed #E6D5CC;
+            padding: 14px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .backup-info-text {
+            font-size: 12px;
+            color: var(--text-earth-muted);
+            line-height: 1.4;
+        }
+
+        .memo-selector-box {
+            background: #FAF2EC; 
+            padding: 16px; 
+            border-radius: 16px; 
+            margin-bottom: 16px;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .form-col {
+            flex: 1;
+            min-width: 140px;
+        }
+        .form-col label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-earth-muted);
+        }
+        .form-col select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-warm);
+            background: var(--card-bg);
+            color: var(--text-earth-dark);
+            font-size: 13px;
+        }
+        .printable-letter {
+            border: 2px dashed #D4C3B9; 
+            padding: 24px; 
+            border-radius: var(--radius-card); 
+            background: var(--card-bg); 
+            margin-top: 16px;
+        }
+        .letter-header { 
+            text-align: center; 
+            border-bottom: 2px solid var(--text-earth-dark); 
+            padding-bottom: 10px; 
+            margin-bottom: 16px; 
+        }
+        .letter-section { margin-bottom: 18px; }
+        .letter-section-title { 
+            font-weight: 700; 
+            font-size: 14px; 
+            border-bottom: 1px solid var(--border-warm); 
+            padding-bottom: 4px; 
+            margin-bottom: 8px; 
+            color: var(--text-earth-dark); 
+        }
+        textarea.letter-textarea {
+            width: 100%;
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 13px;
+            color: var(--text-earth-dark);
+            resize: none;
+            background: #FFFDFB;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(69, 26, 3, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--radius-card);
+            width: 92%;
+            max-width: 440px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(65, 26, 3, 0.15);
+            border: 1px solid var(--border-warm);
+        }
+        .modal-header { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text-earth-dark); }
+        .form-field { margin-bottom: 12px; }
+        .form-field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-earth-muted); }
+        .form-field input, .form-field select, .form-field textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border-warm); border-radius: var(--radius-pill); font-size: 13px; color: var(--text-earth-dark); outline: none; background: #FFFDFB;
+        }
+        .form-field textarea { border-radius: 14px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+        .bottom-nav-container {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 96%;
+            max-width: 650px;
+            background-color: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            padding: 4px;
+            border-radius: var(--radius-pill);
+            box-shadow: 0 8px 32px rgba(65, 26, 3, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 999;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1px;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 0;
+            color: var(--text-earth-muted);
+            text-decoration: none;
+            font-size: 8px;
+            font-weight: 700;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            gap: 1px;
+            min-width: 0;
+            text-align: center;
+        }
+
+        .nav-item .icon { font-size: 13px; }
+        .nav-item span:not(.icon) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .nav-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary-amber);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .photo-card {
+            background: #FFFDFB;
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .photo-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        @media print {
+            body { background: #FFFFFF !important; padding: 0 !important; color: #000000 !important; }
+            .bottom-nav-container, .app-header, .memo-selector-box, .no-print, th:last-child, td:last-child, #ai-floating-btn, #ai-panel { display: none !important; }
+            .app-container { max-width: 100%; margin: 0; padding: 0; }
+            .spa-page { display: none !important; }
+            #panel-memo { display: block !important; }
+            .med-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            .printable-letter { border: none !important; padding: 0 !important; margin: 0 !important; }
+            textarea.letter-textarea { border: none !important; background: transparent !important; width: 100%; }
+            body.privacy-mode .privacy-sensitive { filter: none !important; opacity: 1 !important; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="app-brand">
+            <span class="logo">🌿</span>
+            <h1>LKA eka 家用醫療記錄系統</h1>
+        </div>
+        <div style="display:flex; gap:6px;">
+            <button class="btn-capsule btn-secondary" onclick="syncCloudData(false)">☁️ 同步/上傳雲端</button>
+            <button id="privacy-toggle" class="btn-capsule" onclick="togglePrivacyMode()">
+                <span id="privacy-icon">🔓</span>
+                <span id="privacy-text">隱私保護：關閉</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- PANEL 1: DASHBOARD -->
+    <main id="panel-dashboard" class="spa-page active">
+        <div class="med-card">
+            <div class="card-title">📊 家用醫療管理概覽</div>
+            <div class="dashboard-grid" style="margin-top: 14px;">
+                <div class="stat-card">
+                    <div class="stat-card-title">👥 已登記屋企人</div>
+                    <div class="stat-card-value" id="stat-family-count">0 人</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">🩺 總複診預約</div>
+                    <div class="stat-card-value" id="stat-consults-count">0 次</div>
+                </div>
+                <div class="stat-card alert-card">
+                    <div class="stat-card-title">⚠️ 嚟緊30日複診</div>
+                    <div class="stat-card-value" id="stat-upcoming-count">0 次</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="med-card">
+            <div class="card-title">🔔 即將到臨的複診日程快報</div>
+            <div class="table-container">
+                <table id="dashboard-upcoming-table">
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>類別</th>
+                            <th>日期</th>
+                            <th>時間</th>
+                            <th>醫院 / 科別</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="med-card no-print">
+            <div class="backup-section">
+                <div>
+                    <strong style="font-size:13px; display:block; color:var(--text-earth-dark)">💾 本地自動儲存與備份機制</strong>
+                    <span class="backup-info-text">您輸入的所有資料均會即時儲存於此手機瀏覽器中。您亦可導出 JSON 備份檔案轉移至其他裝置。</span>
+                </div>
+                <div style="display:flex; gap:8px; justify-content: flex-end;">
+                    <button class="btn-capsule btn-secondary" onclick="exportData()">📥 導出備份</button>
+                    <button class="btn-capsule btn-secondary" onclick="document.getElementById('importFile').click()">📤 匯入備份</button>
+                    <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 2: FAMILY -->
+    <main id="panel-family" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">👥 屋企人基本資料總覽</div>
+                <button class="btn-capsule btn-primary" onclick="openFamilyModal()">➕ 新增成員</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>英文全名 (身份證)</th>
+                            <th>出生日期 (年齡)</th>
+                            <th>主要看診醫院</th>
+                            <th>⚠️ 藥物過敏 / 叮囑</th>
+                            <th>緊急聯絡</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="family-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 3: CONSULTATIONS -->
+    <main id="panel-consults" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">🩺 複診日程管理</div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-capsule btn-secondary" onclick="triggerOcrScan('consult')">📷 鏡頭掃描預約紙</button>
+                    <button class="btn-capsule btn-primary" onclick="openConsultModal()">➕ 新增預約</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="consult-filter-select" onchange="renderConsults()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted); margin-left:8px;">應診狀態:</label>
+                <select id="consult-status-filter" onchange="renderConsults()">
+                    <option value="ALL">全部狀態</option>
+                    <option value="未應診" selected>⏳ 未應診</option>
+                    <option value="已應診">✅ 已應診</option>
+                    <option value="待改期">📅 待改期</option>
+                    <option value="已改期">🔄 已改期</option>
+                    <option value="已入院">🏥 已入院</option>
+                    <option value="取消">❌ 已取消</option>
+                </select>
+                <button id="btn-sort-appt" class="btn-capsule btn-secondary" onclick="toggleConsultSort()" style="margin-left: auto;">⇅ 排序：按日期由近至遠</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>類別</th>
+                            <th>複診日期</th>
+                            <th>時間</th>
+                            <th>醫院 / 科別</th>
+                            <th>下次複診日</th>
+                            <th>看診前備忘事項</th>
+                            <th>應診狀態</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consults-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 4: HISTORICAL CONSULTATIONS -->
+    <main id="panel-history" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">📜 歷史複診紀錄專頁</div>
+            </div>
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="history-filter-select" onchange="renderHistoryConsults()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>類別</th>
+                            <th>複診日期</th>
+                            <th>時間</th>
+                            <th>醫院 / 科別</th>
+                            <th>看診前備忘事項</th>
+                            <th>狀態</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 5: MEDICATION -->
+    <main id="panel-meds" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">💊 藥物配藥及服用提醒</div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-capsule btn-secondary" onclick="triggerOcrScan('med')">📷 鏡頭掃描藥袋</button>
+                    <button class="btn-capsule btn-primary" onclick="openMedModal()">➕ 新增紀錄</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="med-filter-select" onchange="renderMeds()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>藥物名稱 (醫學名/俗稱)</th>
+                            <th>主要功效</th>
+                            <th>每日劑量/次數</th>
+                            <th>食幾多日</th>
+                            <th>開始日期</th>
+                            <th>到期日</th>
+                            <th>備註</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="meds-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 6: HEALTH -->
+    <main id="panel-health" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">📊 屋企人日常健康指標紀錄</div>
+                <button class="btn-capsule btn-primary" onclick="openHealthModal()">➕ 新增紀錄</button>
+            </div>
+
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="health-filter-select" onchange="renderHealth()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>紀錄日期 / 時間</th>
+                            <th>指標種類</th>
+                            <th>量度數值</th>
+                            <th>脈搏/心率 (如適用)</th>
+                            <th>狀態備註</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="health-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 7: REPORTS -->
+    <main id="panel-reports" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">📄 醫療化驗及檢查報告庫</div>
+                <button class="btn-capsule btn-primary" onclick="openReportModal()">➕ 新增報告</button>
+            </div>
+
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="report-filter-select" onchange="renderReports()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>報告日期</th>
+                            <th>報告名稱 / 檢查項目</th>
+                            <th>化驗機構 / 醫院</th>
+                            <th>關鍵摘要 / 醫生結論</th>
+                            <th>📂 實體報告存放位置</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 8: MENSTRUATION -->
+    <main id="panel-mens" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">🩸 月經生理週期追蹤紀錄</div>
+                <button class="btn-capsule btn-primary" onclick="openMensModal()">➕ 記錄本次經期</button>
+            </div>
+
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight: 700; color: var(--text-earth-muted)">選擇成員:</label>
+                <select id="mens-filter-select" onchange="renderMens()">
+                    <option value="ALL">全部成員</option>
+                </select>
+            </div>
+
+            <div class="dashboard-grid" id="mens-summary-grid" style="margin-top: 10px; margin-bottom: 16px;">
+                <div class="stat-card" style="border-left-color: #EC4899; background: #FFF5F7;">
+                    <div class="stat-card-title" style="color: #BE185D;">📅 上次經期開始</div>
+                    <div class="stat-card-value" id="mens-stat-last-date" style="font-size: 14px; color: #9D174D;">-</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #F43F5E; background: #FFF1F2;">
+                    <div class="stat-card-title" style="color: #E11D48;">🔮 預測下次日期</div>
+                    <div class="stat-card-value" id="mens-stat-next-date" style="font-size: 14px; color: #9F1239;">-</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #F59E0B; background: #FFFBEB;">
+                    <div class="stat-card-title">🩸 平均週期長度</div>
+                    <div class="stat-card-value" id="mens-stat-cycle" style="font-size: 15px;">-</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>屋企人</th>
+                            <th>經期開始日期</th>
+                            <th>結束日期</th>
+                            <th>經期流量</th>
+                            <th>經痛程度</th>
+                            <th>身心狀態 / 備註</th>
+                            <th class="no-print">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mens-table-body" class="privacy-sensitive"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- PANEL 9: PHOTOS -->
+    <main id="panel-photos" class="spa-page">
+        <div class="med-card">
+            <div class="card-header-flex">
+                <div class="card-title">🖼️ 皮膚及症狀相片雲端日誌</div>
+                <button class="btn-capsule btn-primary" onclick="openPhotoModal()">➕ 拍照 / 上傳相片</button>
+            </div>
+            <div class="filter-section">
+                <label style="font-size: 13px; font-weight:700; color:var(--text-earth-muted)">篩選屋企人:</label>
+                <select id="photo-filter-select" onchange="renderPhotos()">
+                    <option value="ALL">全部屋企人</option>
+                </select>
+            </div>
+            <p style="font-size: 12px; color: var(--text-earth-muted); margin-bottom: 8px;">
+                您可以將媽媽或家人皮膚紅腫、傷口癒合或狀況變化的照片拍照上傳，系統會自動壓縮輕量化儲存，建立時間軸方便睇醫生時即時展示。
+            </p>
+            <div class="photo-grid privacy-sensitive" id="photo-gallery-container"></div>
+        </div>
+    </main>
+
+    <!-- PANEL 10: MEMO LETTER -->
+    <main id="panel-memo" class="spa-page">
+        <div class="med-card no-print">
+            <div class="card-title">🖨️ 醫生看診備忘信自動生成器</div>
+            <div class="memo-selector-box" style="margin-top: 12px;">
+                <p style="font-size: 12px; color: var(--text-earth-muted); margin-bottom: 12px; line-height: 1.4;">
+                    選擇屋企人姓名，系統會自動抽取基本資料與正在服用的藥物清單，一鍵即可呼叫系統列印紙本或儲存為 PDF！
+                </p>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>選擇屋企人:</label>
+                        <select id="memo-member-select" onchange="generateMemoLetter()"></select>
+                    </div>
+                    <div class="form-col">
+                        <label>關聯複診預約 (可選):</label>
+                        <select id="memo-consult-select" onchange="populateMemoConsultInfo()"></select>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+                    <button class="btn-capsule btn-primary" onclick="window.print()">🖨️ 列印此備忘信 / 輸出 PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="med-card">
+            <div class="printable-letter" id="memo-letter-canvas">
+                <div class="letter-header">
+                    <h2 style="font-size: 18px; font-weight: 700; color: #000000; margin-bottom: 4px; border:none; padding:0; justify-content:center;">🏥 屋企人健康狀況及看診備忘錄</h2>
+                    <p style="font-size: 11px; color: #555555; font-weight: 500;">Consultation Briefing Memo</p>
+                </div>
+
+                <div class="letter-section">
+                    <div class="letter-section-title">📌 患者基本資料 (Patient Information)</div>
+                    <table style="width: 100%; border:none; font-size:13px;" class="privacy-sensitive">
+                        <tr style="background:none;"><td style="width:30%; font-weight:700; padding:4px 0; border:none;">屋企人姓名:</td><td id="letter-name" style="padding:4px 0; border:none;">-</td></tr>
+                        <tr style="background:none;"><td style="font-weight:700; padding:4px 0; border:none;">身份證英文全名:</td><td id="letter-eng-name" style="padding:4px 0; border:none;">-</td></tr>
+                        <tr style="background:none;"><td style="font-weight:700; padding:4px 0; border:none;">出生日期 / 年齡:</td><td id="letter-birth" style="padding:4px 0; border:none;">-</td></tr>
+                        <tr style="background:none;"><td style="font-weight:700; padding:4px 0; border:none;">主要隨診醫院:</td><td id="letter-hospital" style="padding:4px 0; border:none;">-</td></tr>
+                        <tr style="background:none;"><td style="font-weight:700; padding:4px 0; border:none; color:var(--danger-text)">⚠️ 藥物過敏 / 特別叮囑:</td><td id="letter-allergies" style="padding:4px 0; border:none; font-weight:700; color:var(--danger-text)">-</td></tr>
+                    </table>
+                </div>
+
+                <div class="letter-section">
+                    <div class="letter-section-title">🕒 本次看診預約資料 (Appointment Details)</div>
+                    <p id="letter-appointment-details" style="font-weight:600; color: var(--text-earth-dark); background: #FAF2EC; padding: 10px; border-radius:8px; font-size: 13px; line-height: 1.4;">-</p>
+                </div>
+
+                <div class="letter-section">
+                    <div class="letter-section-title">💊 目前正服用的藥物清單 (Current Medication List)</div>
+                    <table style="width:100%; border: 1px solid #C4C3B9; border-radius: 0;" id="letter-meds-table" class="privacy-sensitive">
+                        <thead>
+                            <tr style="background:#FAF2EC;">
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">藥物名稱</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">主要功效</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">服用劑量/次數</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">備註</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="letter-section">
+                    <div class="letter-section-title">📝 本次複診想諮詢醫生嘅問題 / 叮囑信件內容</div>
+                    <p style="font-size:11px; color:var(--text-earth-muted); margin-bottom:8px;" class="no-print">💡 您可以直接在下方空白框內輸入文字描述隨後列印，或直接列印出來用原子筆手寫填寫。</p>
+                    <textarea id="letter-custom-memo" class="letter-textarea privacy-sensitive" rows="5" placeholder="例如：最近有沒有經常感到頭暈、吃原先的藥物胃口如何..."></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="processOcrImage(event)">
+
+<!-- 底部固定 10 膠囊選單 -->
+<div class="bottom-nav-container no-print">
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchPage('panel-dashboard', this)">
+            <span class="icon">🏡</span>
+            <span>主頁</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-family', this)">
+            <span class="icon">👥</span>
+            <span>成員</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-consults', this)">
+            <span class="icon">🩺</span>
+            <span>複診</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-history', this)">
+            <span class="icon">📜</span>
+            <span>歷史</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-meds', this)">
+            <span class="icon">💊</span>
+            <span>藥物</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-photos', this)">
+            <span class="icon">🖼️</span>
+            <span>相片</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-health', this)">
+            <span class="icon">📊</span>
+            <span>健康</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-reports', this)">
+            <span class="icon">📄</span>
+            <span>報告</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-mens', this)">
+            <span class="icon">🩸</span>
+            <span>經期</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('panel-memo', this)">
+            <span class="icon">🖨️</span>
+            <span>備忘</span>
+        </div>
+    </nav>
+</div>
+
+<!-- MODALS -->
+
+<!-- PHOTO UPLOAD MODAL -->
+<div id="modal-photo" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">➕ 拍照 / 上傳皮膚症狀相片</div>
+        <div class="form-field">
+            <label>選擇屋企人</label>
+            <select id="form-photo-member"></select>
+        </div>
+        <div class="form-field">
+            <label>拍攝 / 選擇相片</label>
+            <input type="file" id="form-photo-file" accept="image/*" capture="environment" onchange="previewUploadPhoto(event)">
+            <div id="photo-compress-status" style="font-size:11px; color:var(--primary-amber); margin-top:4px; display:none;">⏳ 正在自動壓縮相片以適應手機系統...</div>
+            <img id="form-photo-preview" style="width:100%; max-height:160px; object-fit:cover; margin-top:8px; display:none; border-radius:10px;">
+        </div>
+        <div class="form-field">
+            <label>日期及時間</label>
+            <input type="text" id="form-photo-datetime">
+        </div>
+        <div class="form-field">
+            <label>症狀說明 / 觀察備註</label>
+            <textarea id="form-photo-note" rows="2" placeholder="例如：左腳紅腫退燒第三天、或傷口已結痂"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-photo')">取消</button>
+            <button class="btn-capsule btn-primary" id="btn-save-photo" onclick="savePhoto()">儲存上傳</button>
+        </div>
+    </div>
+</div>
+
+<!-- FAMILY MODAL -->
+<div id="modal-family" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="family-modal-title">新增屋企人資料</div>
+        <input type="hidden" id="form-family-idx">
+        <div class="form-field">
+            <label>屋企人姓名 (如: 媽媽 (Mom))</label>
+            <input type="text" id="form-family-name" required>
+        </div>
+        <div class="form-field">
+            <label>身份證登記英文全名</label>
+            <input type="text" id="form-family-engname">
+        </div>
+        <div class="form-field">
+            <label>出生日期</label>
+            <input type="date" id="form-family-birth">
+        </div>
+        <div class="form-field">
+            <label>主要看診醫院/診所</label>
+            <input type="text" id="form-family-hospital">
+        </div>
+        <div class="form-field">
+            <label>⚠️ 藥物過敏紀錄 / 叮囑</label>
+            <textarea id="form-family-allergies" rows="2"></textarea>
+        </div>
+        <div class="form-field">
+            <label>緊急聯絡人電話</label>
+            <input type="text" id="form-family-phone">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-family')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveFamily()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONSULTATION MODAL -->
+<div id="modal-consult" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="consult-modal-title">新增複診預約</div>
+        <input type="hidden" id="form-consult-idx">
+        <div class="form-field">
+            <label>選擇屋企人</label>
+            <select id="form-consult-member"></select>
+        </div>
+        <div class="form-field">
+            <label>睇診類別</label>
+            <select id="form-consult-type">
+                <option value="覆診">🔁 專科覆診 / 普通科門診</option>
+                <option value="初診">🆕 新症初診</option>
+                <option value="抽血/化驗">🩸 抽血 / 安排化驗</option>
+                <option value="檢查">🔍 影像檢查 (如PET-CT/超聲波)</option>
+                <option value="其他">📌 其他醫療預約</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>本輪看診日期</label>
+            <input type="text" id="form-consult-date" placeholder="例如: 2026-07-14 或 暫無">
+        </div>
+        <div class="form-field">
+            <label>時間</label>
+            <input type="text" id="form-consult-time" placeholder="例如: 09:30 或 14:00-15:30">
+        </div>
+        <div class="form-field">
+            <label>醫院 / 科別</label>
+            <input type="text" id="form-consult-dept" placeholder="例如: 瑪嘉烈醫院- 骨科">
+        </div>
+        <div class="form-field">
+            <label>主診醫生</label>
+            <input type="text" id="form-consult-doc" placeholder="可填 / 或醫生姓名">
+        </div>
+        <div class="form-field">
+            <label>🔮 下次複診日期 (預約或醫生建議)</label>
+            <input type="text" id="form-consult-nextdate" placeholder="例如: 2026-10-15 或 暫無 / 醫生未講">
+        </div>
+        <div class="form-field">
+            <label>應診狀態</label>
+            <select id="form-consult-status">
+                <option value="未應診">⏳ 未應診</option>
+                <option value="已應診">✅ 已應診</option>
+                <option value="待改期">📅 待改期</option>
+                <option value="已改期">🔄 已改期</option>
+                <option value="已入院">🏥 已入院</option>
+                <option value="取消">❌ 已取消</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>看診前備忘事項 (例如需抽血/帶舊藥單)</label>
+            <textarea id="form-consult-memo" rows="2" placeholder="例如：當日需先抽血，之後先複診"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-consult')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveConsult()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- MEDICATION MODAL -->
+<div id="modal-med" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="med-modal-title">新增藥物紀錄</div>
+        <input type="hidden" id="form-med-idx">
+        <div class="form-field">
+            <label>選擇屋企人</label>
+            <select id="form-med-member"></select>
+        </div>
+        <div class="form-field">
+            <label>藥物名稱 (醫學名/俗稱)</label>
+            <input type="text" id="form-med-name" placeholder="例如: Aspirin 阿士匹靈">
+        </div>
+        <div class="form-field">
+            <label>主要功效</label>
+            <input type="text" id="form-med-effect" placeholder="example: 降血壓 / 通血管">
+        </div>
+        <div class="form-field">
+            <label>每日服用劑量/次數</label>
+            <input type="text" id="form-med-freq" placeholder="例如: 每日 1 次，每次 1 粒">
+        </div>
+        <div class="form-field">
+            <label>食幾多日 (服用天數)</label>
+            <input type="text" id="form-med-days" placeholder="例如: 7 日 或 28 日">
+        </div>
+        <div class="form-field">
+            <label>開始服用日期</label>
+            <input type="text" id="form-med-start" placeholder="YYYY-MM-DD (可填 /)">
+        </div>
+        <div class="form-field">
+            <label>食到幾時 (到期日)</label>
+            <input type="text" id="form-med-expiry" placeholder="YYYY-MM-DD (可填 /)">
+        </div>
+        <div class="form-field">
+            <label>備註</label>
+            <textarea id="form-med-remark" rows="2" placeholder="例如: 早餐後服用 / 需隨餐或飯後即時服用"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-med')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveMed()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- HEALTH MODAL -->
+<div id="modal-health" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="health-modal-title">新增健康指標紀錄</div>
+        <input type="hidden" id="form-health-idx">
+        <div class="form-field">
+            <label>選擇屋企人</label>
+            <select id="form-health-member"></select>
+        </div>
+        <div class="form-field">
+            <label>日期及時間</label>
+            <input type="text" id="form-health-datetime" placeholder="例如: 2026-07-13 08:30">
+        </div>
+        <div class="form-field">
+            <label>指標種類</label>
+            <select id="form-health-type">
+                <option value="血壓 (Blood Pressure)">血壓 (Blood Pressure)</option>
+                <option value="血糖 (Blood Glucose)">血糖 (Blood Glucose)</option>
+                <option value="體重 (Weight)">體重 (Weight)</option>
+                <option value="體溫 (Temperature)">體溫 (Temperature)</option>
+                <option value="其他指標">其他指標</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>量度數值</label>
+            <input type="text" id="form-health-value" placeholder="例如: 120/80 或 5.6 或 62kg">
+        </div>
+        <div class="form-field">
+            <label>心率 / 脈搏 (次/分) - 可選填</label>
+            <input type="text" id="form-health-pulse" placeholder="例如: 75 (若非血壓紀錄可填 /)">
+        </div>
+        <div class="form-field">
+            <label>狀態備註 (如: 空腹 / 飯後2小時 / 睡前)</label>
+            <input type="text" id="form-health-note" placeholder="例如: 起床空腹狀態">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-health')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveHealth()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="modal-report" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="report-modal-title">新增化驗/檢查報告紀錄</div>
+        <input type="hidden" id="form-report-idx">
+        <div class="form-field">
+            <label>選擇屋企人</label>
+            <select id="form-report-member"></select>
+        </div>
+        <div class="form-field">
+            <label>報告日期 (或檢查日期)</label>
+            <input type="text" id="form-report-date" placeholder="例如: 2026-07-10">
+        </div>
+        <div class="form-field">
+            <label>報告名稱 / 檢查項目</label>
+            <input type="text" id="form-report-title" placeholder="例如: PET-CT正電子掃描 / 驗血全血報告">
+        </div>
+        <div class="form-field">
+            <label>化驗機構 / 看診醫院</label>
+            <input type="text" id="form-report-hospital" placeholder="例如: 港怡醫院 / 瑪嘉烈醫院">
+        </div>
+        <div class="form-field">
+            <label>關鍵摘要 / 醫生結論</label>
+            <textarea id="form-report-summary" rows="3" placeholder="例如: 腫瘤指標穩定、各項指數與上月對比無明顯異常。"></textarea>
+        </div>
+        <div class="form-field">
+            <label>📂 實體報告存放位置 (極重要！方便找尋)</label>
+            <input type="text" id="form-report-location" placeholder="例如: 客廳電視櫃藍色文件夾中 / 媽媽隨身袋">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-report')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveReport()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- MENSTRUATION MODAL -->
+<div id="modal-mens" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header" id="mens-modal-title">新增月經期記錄</div>
+        <input type="hidden" id="form-mens-idx">
+        <div class="form-field">
+            <label>選擇成員</label>
+            <select id="form-mens-member"></select>
+        </div>
+        <div class="form-field">
+            <label>經期開始日期 (必填)</label>
+            <input type="date" id="form-mens-start" required>
+        </div>
+        <div class="form-field">
+            <label>結束日期 (未完可先不填)</label>
+            <input type="date" id="form-mens-end">
+        </div>
+        <div class="form-field">
+            <label>經期流量狀態</label>
+            <select id="form-mens-flow">
+                <option value="正常">🟢 正常 (Moderate)</option>
+                <option value="偏少">🟡 偏少 (Light)</option>
+                <option value="偏多">🔴 偏多 (Heavy)</option>
+                <option value="極多/有血塊">⚠️ 極多 / 伴隨大血塊</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>經痛程度</label>
+            <select id="form-mens-pain">
+                <option value="無痛">🟢 無痛 (None)</option>
+                <option value="輕微悶痛">🟡 輕微悶痛 (Mild)</option>
+                <option value="中度疼痛(需休息)">🟠 中度疼痛 (Moderate)</option>
+                <option value="劇痛(需服止痛藥)">🔴 劇痛 / 需服止痛藥 (Severe)</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>身心狀態備註 (如：腰酸、偏頭痛、心情煩躁)</label>
+            <input type="text" id="form-mens-note" placeholder="例如: 頭幾天腹脹、有些許水腫">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-capsule btn-secondary" onclick="closeModal('modal-mens')">取消</button>
+            <button class="btn-capsule btn-primary" onclick="saveMens()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- AI PANEL -->
+<div id="ai-floating-btn" class="no-print" style="position: fixed; bottom: 95px; right: 20px; width: 48px; height: 48px; background: var(--primary-amber); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; z-index: 9999; box-shadow: 0 4px 12px rgba(217,119,6,0.3);" onclick="toggleAIPanel()">🩺</div>
+
+<div id="ai-panel" class="no-print" style="position: fixed; bottom: 155px; right: 20px; width: 320px; height: 450px; background: var(--card-bg); border-radius: var(--radius-card); box-shadow: 0 8px 24px rgba(69,26,3,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; border: 1px solid var(--border-warm); font-family: inherit;">
+    <div style="background: var(--primary-amber); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px;">
+        <span style="display: flex; align-items: center; gap: 6px;">🌿 暖杏智能醫護助理 AI</span>
+        <span style="cursor: pointer; font-size: 16px;" onclick="toggleAIPanel()">✕</span>
+    </div>
+    <div style="background: #FAF2EC; padding: 8px 12px; border-bottom: 1px solid var(--border-warm); font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleApiKeyConfig()">
+            <span style="font-weight: bold; color: var(--text-earth-muted);">🔑 設定 Gemini API Key (可連網對話)</span>
+            <span id="api-drawer-icon">▼</span>
+        </div>
+        <div id="api-key-input-container" style="display: none; margin-top: 6px; gap: 6px;">
+            <input type="password" id="gemini-api-key" placeholder="輸入 AI API Key (AI_KEY)..." style="flex: 1; padding: 4px 8px; border: 1px solid var(--border-warm); border-radius: 6px; font-size: 11px;">
+            <button class="btn-capsule btn-primary" onclick="saveApiKey()" style="padding: 4px 8px; font-size: 11px;">儲存</button>
+        </div>
+    </div>
+    <div id="ai-messages" style="flex: 1; padding: 14px; overflow-y: auto; background: var(--bg-warm-apricot); font-size: 13px; display: flex; flex-direction: column; gap: 10px; line-height: 1.5;">
+        <div style="background: #FFFFFF; padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid var(--border-warm);">
+            👋 您好！我是您的暖杏家用醫護助理。我會根據系統內現有的屋企人基本資料、複診、用藥和月經紀錄，為您提供主動式的護理風險篩查提示。
+        </div>
+    </div>
+    <div style="padding: 8px 12px; background: #fff; border-top: 1px solid var(--border-warm); display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+        <button class="btn-capsule btn-secondary" style="font-size: 11px; padding: 4px 12px;" onclick="runAIAudit()">🔍 執行臨床風險篩查</button>
+    </div>
+    <div style="padding: 10px; border-top: 1px solid var(--border-warm); display: flex; gap: 8px; background: #fff;">
+        <input type="text" id="ai-input" placeholder="輸入關於用藥、護理或複診問題..." style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-warm); border-radius: var(--radius-pill); font-size: 12px; outline: none; color: var(--text-earth-dark);" onkeypress="if(event.key==='Enter') sendUserAIMsg()">
+        <button class="btn-capsule btn-primary" onclick="sendUserAIMsg()" style="padding: 6px 14px;">傳送</button>
+    </div>
+</div>
+
+<script>
+    // ☁️ Firebase 雲端資料庫專屬設定
+    const firebaseConfig = {
+        apiKey: "AIzaSyCCM4c2gnB-41j7ZeNr5HjFNKobNChghKs",
+        authDomain: "lka-medical-system.firebaseapp.com",
+        databaseURL: "https://lka-medical-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "lka-medical-system",
+        storageBucket: "lka-medical-system.firebasestorage.app",
+        messagingSenderId: "528839902033",
+        appId: "1:528839902033:web:2632a61bbec7d28ce70970",
+        measurementId: "G-ND2H70QGYV"
+    };
+
+    // 初始化 Firebase
+    let database = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+    } catch(e) {
+        console.log("Firebase 初始化失敗，使用本地儲存：", e);
+    }
+
+    const defaultFamily = [
+        { name: "爸爸 (Dad)", engName: "chan F.K", birth: "1957-12-16", hospital: "暫無", allergies: "NKDA", phone: "96346033（ 細女）" },
+        { name: "媽媽 (Mom)", engName: "Lee K. W", birth: "1954-07-13", hospital: "瑪嘉烈醫院，北大嶼山醫院，明愛醫院，仁濟醫院，瑪麗醫院", allergies: "Drug allergy: Carbimazole", phone: "96346033 （ 細女）" }
+    ];
+
+    const defaultConsults = [
+        { member: "爸爸 (Dad)", type: "覆診", date: "暫無", time: "/", dept: "/", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-02", time: "09:30:00", dept: "北大嶼山醫院- 內科", doc: "/", nextDate: "2026-07-14", memo: "當日需先抽血， 之後先複診（已為她準備好一封信內附她的資料及需要查詢醫生的事）", status: "已應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-14", time: "12:00:00", dept: "瑪嘉烈醫院- 骨科", doc: "/", nextDate: "2026-08-11", memo: "/", status: "已應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-15", time: "16:30-17:00", dept: "港怡醫院- 婦產科門診", doc: "/", nextDate: "/", memo: "準備Pet scan 實體報告&準備一封有關病情嘅信帶去俾醫生", status: "已應診" },
+        { member: "媽媽 (Mom)", type: "抽血/化驗", date: "2026-07-20", time: "14:00:00", dept: "瑪嘉烈醫院-腫腫科抽血", doc: "/", nextDate: "2026-07-27", memo: "/", status: "已應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-24", time: "10:00:00", dept: "明愛醫院- 物理治療", doc: "/", nextDate: "/", memo: "/", status: "已應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-27", time: "10:45:00", dept: "瑪嘉烈醫院-腫腫科", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-07-28", time: "14:30:00", dept: "明愛醫院-眼整形科", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-08-05", time: "09:15:00", dept: "北大嶼山醫院-營養科", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-08-19", time: "10:00:00", dept: "瑪嘉烈醫院-婦科腫腫科", doc: "/", nextDate: "/", memo: "帶埋婦科腫腫科轉介信（正本）", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-08-09", time: "09:15:00", dept: "北大嶼山醫院-足病治療部", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-09-30", time: "11:00:00", dept: "瑪麗醫院-義肢矯形部", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "檢查", date: "2026-10-28", time: "14:00:00", dept: "北大嶼山醫院（日間手術及內視鏡診療中心）- 外科胃內鏡檢查", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "初診", date: "2026-11-11", time: "14:00:00", dept: "北大嶼山醫院-骨科（新症）", doc: "/", nextDate: "/", memo: "帶轉介信（正本）", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2026-11-13", time: "10:00:00", dept: "明愛醫院-物理治療", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "初診", date: "2027-01-15", time: "11:30:00", dept: "瑪嘉烈醫院-泌尿科（新症）", doc: "/", nextDate: "/", memo: "帶轉介信（正本）", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2027-03-25", time: "09:00:00", dept: "/", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "檢查", date: "2027-06-18", time: "16:10:00", dept: "放射科/核子醫學", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "覆診", date: "2027-12-03", time: "09:45:00", dept: "瑪嘉烈醫院-神經傳道測試", doc: "/", nextDate: "/", memo: "/", status: "未應診" },
+        { member: "媽媽 (Mom)", type: "檢查", date: "2027-08-03", time: "15:00:00", dept: "瑪嘉烈醫院-心臟超聲波掃描", doc: "/", nextDate: "/", memo: "/", status: "未應診" }
+    ];
+
+    const defaultMeds = [
+        { member: "媽媽 (Mom)", name: "降血壓藥 (藥名待更新)", effect: "穩定血壓", freq: "每日 1 次，每次 1 粒", days: "28 日", start: "/", expiry: "/", remark: "早餐後服用" },
+        { member: "媽媽 (Mom)", name: "隨餐藥 (藥名待更新)", effect: "配餐服用", freq: "每日 2 次，早晚餐後", days: "28 日", start: "/", expiry: "/", remark: "需隨餐或飯後即時服用" }
+    ];
+
+    const defaultHealth = [
+        { member: "媽媽 (Mom)", datetime: "2026-07-13 08:00", type: "血壓 (Blood Pressure)", value: "125/82", pulse: "72", note: "起床空腹量度" }
+    ];
+
+    const defaultReports = [
+        { member: "媽媽 (Mom)", date: "2026-06-15", title: "PET-CT 正電子電腦斷層掃描", hospital: "港怡醫院", summary: "整體病灶受控，無明顯新擴散點。", location: "客廳大櫃第三格黑色文件夾" }
+    ];
+
+    const defaultMens = [
+        { member: "媽媽 (Mom)", start: "2026-06-10", end: "2026-06-15", flow: "正常", pain: "輕微悶痛", note: "一切安好" }
+    ];
+
+    const defaultPhotos = [];
+
+    function sanitizeState(s) {
+        if (!s || typeof s !== 'object') s = {};
+        if (!s.family || !Array.isArray(s.family) || s.family.length === 0) s.family = defaultFamily;
+        if (!s.consults || !Array.isArray(s.consults) || s.consults.length === 0) s.consults = defaultConsults;
+        if (!s.meds || !Array.isArray(s.meds)) s.meds = defaultMeds;
+        if (!s.health || !Array.isArray(s.health)) s.health = defaultHealth;
+        if (!s.reports || !Array.isArray(s.reports)) s.reports = defaultReports;
+        if (!s.mens || !Array.isArray(s.mens)) s.mens = defaultMens;
+        if (!s.photos || !Array.isArray(s.photos)) s.photos = defaultPhotos;
+        if (!s.sortOrder) s.sortOrder = 'asc';
+        return s;
+    }
+
+    function loadInitialState() {
+        let f = JSON.parse(localStorage.getItem('medApp_family'));
+        let c = JSON.parse(localStorage.getItem('medApp_consults'));
+        let m = JSON.parse(localStorage.getItem('medApp_meds'));
+        let h = JSON.parse(localStorage.getItem('medApp_health'));
+        let r = JSON.parse(localStorage.getItem('medApp_reports'));
+        let me = JSON.parse(localStorage.getItem('medApp_mens'));
+        let p = JSON.parse(localStorage.getItem('medApp_photos'));
+
+        return sanitizeState({
+            family: f, consults: c, meds: m, health: h, reports: r, mens: me, photos: p, sortOrder: 'asc'
+        });
+    }
+
+    let state = loadInitialState();
+    let currentOcrTarget = 'med';
+    let tempUploadedPhotoBase64 = '';
+
+    function saveState() {
+        state = sanitizeState(state);
+        try {
+            localStorage.setItem('medApp_family', JSON.stringify(state.family));
+            localStorage.setItem('medApp_consults', JSON.stringify(state.consults));
+            localStorage.setItem('medApp_meds', JSON.stringify(state.meds));
+            localStorage.setItem('medApp_health', JSON.stringify(state.health));
+            localStorage.setItem('medApp_reports', JSON.stringify(state.reports));
+            localStorage.setItem('medApp_mens', JSON.stringify(state.mens));
+            localStorage.setItem('medApp_photos', JSON.stringify(state.photos));
+
+            if(database) {
+                database.ref('lka_medical_data').set(state);
+            }
+        } catch (e) {
+            alert('⚠️ 瀏覽器儲存空間不足，建議刪除部分舊相片！');
+        }
+        updateAllViews();
+    }
+
+    // 自動同步 Firebase 雲端資料（防空資料覆蓋）
+    function syncCloudData(silent = false) {
+        if(database) {
+            database.ref('lka_medical_data').once('value').then((snapshot) => {
+                const cloudData = snapshot.val();
+                if(cloudData && cloudData.family && cloudData.family.length > 0) {
+                    state = sanitizeState(cloudData);
+                    saveState();
+                    if(!silent) alert('☁️ 已成功由 Google Firebase 雲端同步最新紀錄！');
+                } else {
+                    // 雲端無資料時，自動將本地/預設數據上傳推送
+                    database.ref('lka_medical_data').set(state);
+                    if(!silent) alert('☁️ 雲端已自動上傳並備份你目前的完整醫療紀錄！');
+                }
+            }).catch(err => {
+                if(!silent) alert('⚠️ 雲端連線失敗：' + err.message);
+            });
+        }
+    }
+
+    function switchPage(pageId, element) {
+        document.querySelectorAll('.spa-page').forEach(page => page.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        
+        if(element) {
+            element.classList.add('active');
+        } else {
+            const mapping = {
+                'panel-dashboard': 0, 'panel-family': 1, 'panel-consults': 2, 'panel-history': 3, 'panel-meds': 4, 'panel-photos': 5, 'panel-health': 6, 'panel-reports': 7, 'panel-mens': 8, 'panel-memo': 9
+            };
+            const idx = mapping[pageId];
+            const items = document.querySelectorAll('.nav-item');
+            if(items[idx]) items[idx].classList.add('active');
+        }
+        
+        if(pageId === 'panel-memo') initMemoTab();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function togglePrivacyMode() {
+        const body = document.body;
+        const btn = document.getElementById('privacy-toggle');
+        const icon = document.getElementById('privacy-icon');
+        const text = document.getElementById('privacy-text');
+
+        body.classList.toggle('privacy-mode');
+
+        if (body.classList.contains('privacy-mode')) {
+            btn.classList.add('active');
+            icon.innerText = '🔒';
+            text.innerText = '隱私保護：開啟';
+        } else {
+            btn.classList.remove('active');
+            icon.innerText = '🔓';
+            text.innerText = '隱私保護：關閉';
+        }
+    }
+
+    function calculateAge(birthDateString) {
+        if(!birthDateString || birthDateString === '暫無') return '-';
+        const birthDate = new Date(birthDateString);
+        if(isNaN(birthDate)) return '-';
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age + ' 歲';
+    }
+
+    function getCountdownText(dateStr, status = '未應診') {
+        if(status === '已應診') return { text: '已應診', badge: 'badge-success', days: -999 };
+        if(status === '取消') return { text: '已取消', badge: 'badge-muted', days: -999 };
+        if(status === '已入院') return { text: '已入院', badge: 'badge-danger', days: -999 };
+        if(status === '待改期') return { text: '待改期', badge: 'badge-warning', days: 9999 };
+        if(status === '已改期') return { text: '已改期', badge: 'badge-info', days: 9999 };
+
+        if(!dateStr || dateStr === '暫無' || dateStr === '/') return { text: '未定日期', badge: 'badge-muted', days: 9999 };
+        const cDate = new Date(dateStr);
+        if(isNaN(cDate)) return { text: dateStr, badge: 'badge-info', days: 9999 };
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        cDate.setHours(0,0,0,0);
+        
+        const diffTime = cDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return { text: '今日看診', badge: 'badge-danger', days: 0 };
+        if (diffDays === 1) return { text: '明天看診', badge: 'badge-warning', days: 1 };
+        if (diffDays < 0) return { text: '已過期', badge: 'badge-muted', days: diffDays };
+        return { text: `${diffDays} 日後`, badge: diffDays <= 7 ? 'badge-warning' : 'badge-success', days: diffDays };
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function updateAllViews() {
+        state = sanitizeState(state);
+        renderDashboard();
+        renderFamily();
+        renderConsults();
+        renderHistoryConsults();
+        renderMeds();
+        renderPhotos();
+        renderHealth();
+        renderReports();
+        renderMens();
+        populateDropdowns();
+    }
+
+    function populateDropdowns() {
+        const selects = [
+            'form-consult-member', 'form-med-member', 'form-health-member', 'form-report-member', 'form-mens-member', 'form-photo-member',
+            'consult-filter-select', 'history-filter-select', 'med-filter-select', 'health-filter-select', 'report-filter-select', 'mens-filter-select', 'photo-filter-select'
+        ];
+        selects.forEach(sid => {
+            const el = document.getElementById(sid);
+            if(!el) return;
+            const currentVal = el.value;
+            el.innerHTML = '';
+            if(sid.includes('filter')) {
+                el.innerHTML = '<option value="ALL">全部屋企人</option>';
+            }
+            state.family.forEach(f => {
+                el.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+            });
+            if(currentVal) el.value = currentVal;
+        });
+    }
+
+    function sanitizeOcrText(txt) {
+        if(!txt) return '';
+        let clean = txt.replace(/[\=\|\_\§\¥\/\#\&\*]/g, ' ').replace(/\s+/g, ' ').trim();
+        if(clean.length < 3) return '';
+        return clean;
+    }
+
+    function triggerOcrScan(targetType) {
+        currentOcrTarget = targetType;
+        document.getElementById('ocr-camera-input').click();
+    }
+
+    async function processOcrImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        alert('📷 鏡頭已捕獲相片，AI 正在即時辨識文字中，請稍候...');
+
+        try {
+            const worker = await Tesseract.createWorker('eng+chi_tra');
+            const ret = await worker.recognize(file);
+            await worker.terminate();
+            
+            const text = ret.data.text;
+            const cleanText = sanitizeOcrText(text);
+
+            if (currentOcrTarget === 'med') {
+                openMedModal();
+                const drugName = extractDrugName(cleanText);
+                if (drugName) {
+                    document.getElementById('form-med-name').value = drugName;
+                }
+                if (cleanText) {
+                    document.getElementById('form-med-remark').value = "掃描文字：" + cleanText.substring(0, 100);
+                }
+            } else {
+                openConsultModal();
+                const dept = extractHospitalDept(cleanText);
+                if (dept) {
+                    document.getElementById('form-consult-dept').value = dept;
+                }
+                if (cleanText) {
+                    document.getElementById('form-consult-memo').value = "掃描文字：" + cleanText.substring(0, 100);
+                }
+            }
+
+            if(cleanText) {
+                alert('✅ 辨識完成！系統已為您自動填入關鍵資訊。');
+            } else {
+                alert('📷 相片較模糊或光線不足，未成功擷取到文字，請直接手動填寫。');
+            }
+
+        } catch (err) {
+            alert('📷 掃描辨識完成，請直接手動填寫資料。');
+            if (currentOcrTarget === 'med') openMedModal(); else openConsultModal();
+        }
+    }
+
+    function extractDrugName(txt) {
+        const match = txt.match(/([A-Za-z0-9\s]{4,20}\s?(TAB|CAP|MG|ML))/i);
+        return match ? match[0].trim() : '';
+    }
+
+    function extractHospitalDept(txt) {
+        const match = txt.match(/(瑪嘉烈|北大嶼山|明愛|仁濟|瑪麗|港怡|醫院|診所|門診|專科|骨科|內科|腫瘤科|婦科|物理治療)/);
+        return match ? match[0].trim() : '';
+    }
+
+    function renderPhotos() {
+        const filter = document.getElementById('photo-filter-select').value;
+        const container = document.getElementById('photo-gallery-container');
+        container.innerHTML = '';
+
+        if (!state.photos) state.photos = [];
+
+        state.photos.forEach((p, idx) => {
+            if(filter !== 'ALL' && p.member !== filter) return;
+            container.innerHTML += `
+                <div class="photo-card">
+                    <img src="${p.url}" alt="症狀相片" onclick="window.open('${p.url}')">
+                    <div style="font-size:11px; font-weight:700;">${p.member}</div>
+                    <div style="font-size:10px; color:#666;">📅 ${p.datetime}</div>
+                    <div style="font-size:11px; color:var(--text-earth-dark);">${p.note}</div>
+                    <button class="btn-capsule btn-danger" style="margin-top:4px;" onclick="deletePhoto(${idx})">🗑️ 刪除相片</button>
+                </div>
+            `;
+        });
+
+        if(container.innerHTML === '') {
+            container.innerHTML = '<p style="grid-column: span 2; text-align:center; color:#888; padding:20px;">暫未上傳任何症狀相片。</p>';
+        }
+    }
+
+    function openPhotoModal() {
+        populateDropdowns();
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        document.getElementById('form-photo-datetime').value = timeStr;
+        document.getElementById('form-photo-note').value = '';
+        document.getElementById('form-photo-preview').style.display = 'none';
+        document.getElementById('photo-compress-status').style.display = 'none';
+        tempUploadedPhotoBase64 = '';
+        openModal('modal-photo');
+    }
+
+    function previewUploadPhoto(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        const statusText = document.getElementById('photo-compress-status');
+        statusText.style.display = 'block';
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxWidth = 600; 
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                tempUploadedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+                const previewImg = document.getElementById('form-photo-preview');
+                previewImg.src = tempUploadedPhotoBase64;
+                previewImg.style.display = 'block';
+                statusText.style.display = 'none';
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function savePhoto() {
+        if(!tempUploadedPhotoBase64) return alert('請先選擇或拍攝相片！');
+        const data = {
+            member: document.getElementById('form-photo-member').value,
+            datetime: document.getElementById('form-photo-datetime').value,
+            note: document.getElementById('form-photo-note').value.trim() || "皮膚患部紀錄",
+            url: tempUploadedPhotoBase64
+        };
+        if(!state.photos) state.photos = [];
+        state.photos.push(data);
+        closeModal('modal-photo');
+        saveState();
+    }
+
+    function deletePhoto(idx) {
+        if(confirm('確定要刪除這張症狀相片嗎？')) {
+            state.photos.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function renderDashboard() {
+        document.getElementById('stat-family-count').innerText = `${state.family.length} 人`;
+        document.getElementById('stat-consults-count').innerText = `${state.consults.length} 次`;
+        
+        const validConsults = state.consults.filter(c => c.date !== '暫無' && c.date !== '/' && (c.status || '未應診') === '未應診');
+        validConsults.sort((a,b) => new Date(a.date) - new Date(b.date));
+        
+        let upcomingCount = 0;
+        const tbody = document.querySelector('#dashboard-upcoming-table tbody');
+        tbody.innerHTML = '';
+        
+        validConsults.forEach(c => {
+            const cd = getCountdownText(c.date, c.status);
+            if(cd.days >= 0 && cd.days <= 30) upcomingCount++;
+            
+            if(cd.days >= 0) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.member}</strong></td>
+                        <td><span class="badge badge-info">${c.type || '覆診'}</span></td>
+                        <td>${c.date}</td>
+                        <td>${c.time}</td>
+                        <td>${c.dept}</td>
+                        <td><span class="badge ${cd.badge}">${cd.text}</span></td>
+                    </tr>
+                `;
+            }
+        });
+        
+        if(tbody.innerHTML === '') {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-earth-muted);">暫時冇即將到臨嘅複診預約。</td></tr>';
+        }
+        document.getElementById('stat-upcoming-count').innerText = `${upcomingCount} 次`;
+    }
+
+    function renderFamily() {
+        const tbody = document.getElementById('family-table-body');
+        tbody.innerHTML = '';
+        state.family.forEach((f, idx) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${f.name}</strong></td>
+                    <td>${f.engName || '-'}</td>
+                    <td>${f.birth || '-'} (${calculateAge(f.birth)})</td>
+                    <td><span style="font-size:12px;">${f.hospital || '-'}</span></td>
+                    <td style="color:var(--danger-text); font-weight:600;">${f.allergies || '-'}</td>
+                    <td>${f.phone || '-'}</td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editFamily(${idx})">改</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteFamily(${idx})">刪</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function openFamilyModal(idx = null) {
+        if(idx === null) {
+            document.getElementById('family-modal-title').innerText = '➕ 新增屋企人基本資料';
+            document.getElementById('form-family-idx').value = '';
+            document.getElementById('form-family-name').value = '';
+            document.getElementById('form-family-engname').value = '';
+            document.getElementById('form-family-birth').value = '';
+            document.getElementById('form-family-hospital').value = '';
+            document.getElementById('form-family-allergies').value = '';
+            document.getElementById('form-family-phone').value = '';
+        } else {
+            const f = state.family[idx];
+            document.getElementById('family-modal-title').innerText = '✏️ 修改屋企人資料';
+            document.getElementById('form-family-idx').value = idx;
+            document.getElementById('form-family-name').value = f.name;
+            document.getElementById('form-family-engname').value = f.engName;
+            document.getElementById('form-family-birth').value = f.birth;
+            document.getElementById('form-family-hospital').value = f.hospital;
+            document.getElementById('form-family-allergies').value = f.allergies;
+            document.getElementById('form-family-phone').value = f.phone;
+        }
+        openModal('modal-family');
+    }
+
+    function saveFamily() {
+        const name = document.getElementById('form-family-name').value.trim();
+        if(!name) return alert('請填寫屋企人姓名！');
+        
+        const data = {
+            name: name,
+            engName: document.getElementById('form-family-engname').value.trim(),
+            birth: document.getElementById('form-family-birth').value,
+            hospital: document.getElementById('form-family-hospital').value.trim(),
+            allergies: document.getElementById('form-family-allergies').value.trim(),
+            phone: document.getElementById('form-family-phone').value.trim()
+        };
+        
+        const idx = document.getElementById('form-family-idx').value;
+        if(idx === '') {
+            state.family.push(data);
+        } else {
+            state.family[parseInt(idx)] = data;
+        }
+        closeModal('modal-family');
+        saveState();
+    }
+
+    function editFamily(idx) { openFamilyModal(idx); }
+    function deleteFamily(idx) {
+        if(confirm(`肯定要刪除 ${state.family[idx].name} 嘅所有基本資料嗎？`)) {
+            state.family.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function getStatusBadgeClass(st) {
+        switch(st) {
+            case '已應診': return 'badge-success';
+            case '已改期': return 'badge-info';
+            case '待改期': return 'badge-warning';
+            case '已入院': return 'badge-danger';
+            case '取消': return 'badge-muted';
+            default: return 'badge-warning';
+        }
+    }
+
+    function renderConsults() {
+        const filter = document.getElementById('consult-filter-select').value;
+        const statusFilter = document.getElementById('consult-status-filter').value;
+        const tbody = document.getElementById('consults-table-body');
+        tbody.innerHTML = '';
+        
+        let list = state.consults.map((c, idx) => ({...c, originalIdx: idx}));
+        
+        list.sort((a, b) => {
+            if (a.date === '暫無' || a.date === '/') return 1;
+            if (b.date === '暫無' || b.date === '/') return -1;
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            if (isNaN(dateA)) return 1;
+            if (isNaN(dateB)) return -1;
+            return state.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+        });
+
+        list.forEach(c => {
+            if(filter !== 'ALL' && c.member !== filter) return;
+            const currentStatus = c.status || '未應診';
+            if(statusFilter !== 'ALL' && currentStatus !== statusFilter) return;
+
+            const cd = getCountdownText(c.date, currentStatus);
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${c.member}</strong></td>
+                    <td><span class="badge badge-info">${c.type || '覆診'}</span></td>
+                    <td>${c.date}</td>
+                    <td>${c.time}</td>
+                    <td><span style="font-size:12px;">${c.dept}</span></td>
+                    <td><strong style="color:var(--primary-amber);">${c.nextDate || '/'}</strong></td>
+                    <td style="max-width:150px; font-size:12px; color:var(--text-earth-muted);">${c.memo}</td>
+                    <td>
+                        <span class="badge ${getStatusBadgeClass(currentStatus)}">${currentStatus}</span>
+                    </td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editConsult(${c.originalIdx})">✏️</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteConsult(${c.originalIdx})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function renderHistoryConsults() {
+        const filter = document.getElementById('history-filter-select').value;
+        const tbody = document.getElementById('history-table-body');
+        tbody.innerHTML = '';
+
+        let list = state.consults.map((c, idx) => ({...c, originalIdx: idx}));
+        list.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        list.forEach(c => {
+            if(filter !== 'ALL' && c.member !== filter) return;
+            const cd = getCountdownText(c.date, c.status);
+            if(c.status === '已應診' || c.status === '取消' || cd.days < 0) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.member}</strong></td>
+                        <td><span class="badge badge-info">${c.type || '覆診'}</span></td>
+                        <td>${c.date}</td>
+                        <td>${c.time}</td>
+                        <td><span style="font-size:12px;">${c.dept}</span></td>
+                        <td style="font-size:12px; color:var(--text-earth-muted);">${c.memo}</td>
+                        <td><span class="badge ${getStatusBadgeClass(c.status)}">${c.status || '歷史紀錄'}</span></td>
+                        <td class="no-print">
+                            <button class="btn-capsule btn-edit" onclick="editConsult(${c.originalIdx})">✏️</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        if(tbody.innerHTML === '') {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#888; padding:20px;">暫未有歷史複診紀錄。</td></tr>';
+        }
+    }
+
+    function toggleConsultSort() {
+        state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+        const btn = document.getElementById('btn-sort-appt');
+        if (btn) {
+            btn.innerText = state.sortOrder === 'asc' ? '⇅ 排序：按日期由近至遠' : '⇅ 排序：按日期由遠至近';
+        }
+        renderConsults();
+    }
+
+    function openConsultModal(idx = null) {
+        populateDropdowns();
+        if(idx === null) {
+            document.getElementById('consult-modal-title').innerText = '➕ 新增預約/覆診日程';
+            document.getElementById('form-consult-idx').value = '';
+            document.getElementById('form-consult-type').value = '覆診';
+            document.getElementById('form-consult-date').value = '';
+            document.getElementById('form-consult-time').value = '';
+            document.getElementById('form-consult-dept').value = '';
+            document.getElementById('form-consult-doc').value = '/';
+            document.getElementById('form-consult-nextdate').value = '/';
+            document.getElementById('form-consult-status').value = '未應診';
+            document.getElementById('form-consult-memo').value = '/';
+        } else {
+            const c = state.consults[idx];
+            document.getElementById('consult-modal-title').innerText = '✏️ 修改預約/覆診日程';
+            document.getElementById('form-consult-idx').value = idx;
+            document.getElementById('form-consult-member').value = c.member;
+            document.getElementById('form-consult-type').value = c.type || '覆診';
+            document.getElementById('form-consult-date').value = c.date;
+            document.getElementById('form-consult-time').value = c.time;
+            document.getElementById('form-consult-dept').value = c.dept;
+            document.getElementById('form-consult-doc').value = c.doc;
+            document.getElementById('form-consult-nextdate').value = c.nextDate || '/';
+            document.getElementById('form-consult-status').value = c.status || '未應診';
+            document.getElementById('form-consult-memo').value = c.memo;
+        }
+        openModal('modal-consult');
+    }
+
+    function saveConsult() {
+        const data = {
+            member: document.getElementById('form-consult-member').value,
+            type: document.getElementById('form-consult-type').value,
+            date: document.getElementById('form-consult-date').value.trim() || "暫無",
+            time: document.getElementById('form-consult-time').value.trim() || "/",
+            dept: document.getElementById('form-consult-dept').value.trim() || "/",
+            doc: document.getElementById('form-consult-doc').value.trim() || "/",
+            nextDate: document.getElementById('form-consult-nextdate').value.trim() || "/",
+            status: document.getElementById('form-consult-status').value,
+            memo: document.getElementById('form-consult-memo').value.trim() || "/"
+        };
+        const idx = document.getElementById('form-consult-idx').value;
+        if(idx === '') {
+            state.consults.push(data);
+        } else {
+            state.consults[parseInt(idx)] = data;
+        }
+        closeModal('modal-consult');
+        saveState();
+    }
+
+    function editConsult(idx) { openConsultModal(idx); }
+    function deleteConsult(idx) {
+        if(confirm('肯定要刪除呢個預約日程嗎？')) {
+            state.consults.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function renderMeds() {
+        const filter = document.getElementById('med-filter-select').value;
+        const tbody = document.getElementById('meds-table-body');
+        tbody.innerHTML = '';
+        
+        state.meds.forEach((m, idx) => {
+            if(filter !== 'ALL' && m.member !== filter) return;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${m.member}</strong></td>
+                    <td><strong style="color:var(--primary-amber);">${m.name || '未輸入藥名'}</strong></td>
+                    <td>${m.effect || '-'}</td>
+                    <td><span class="badge badge-info">${m.freq}</span></td>
+                    <td><strong style="color:var(--primary-amber);">${m.days || '28 日'}</strong></td>
+                    <td>${m.start || '-'}</td>
+                    <td>${m.expiry || '-'}</td>
+                    <td style="font-size:12px; color:var(--text-earth-muted);">${m.remark || '-'}</td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editMed(${idx})">✏️</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteMed(${idx})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function openMedModal(idx = null) {
+        populateDropdowns();
+        if(idx === null) {
+            document.getElementById('med-modal-title').innerText = '➕ 新增服藥紀錄';
+            document.getElementById('form-med-idx').value = '';
+            document.getElementById('form-med-name').value = '';
+            document.getElementById('form-med-effect').value = '';
+            document.getElementById('form-med-freq').value = '';
+            document.getElementById('form-med-days').value = '28 日';
+            document.getElementById('form-med-start').value = '/';
+            document.getElementById('form-med-expiry').value = '/';
+            document.getElementById('form-med-remark').value = '';
+        } else {
+            const m = state.meds[idx];
+            document.getElementById('med-modal-title').innerText = '✏️ 修改服藥紀錄';
+            document.getElementById('form-med-idx').value = idx;
+            document.getElementById('form-med-member').value = m.member;
+            document.getElementById('form-med-name').value = m.name || '';
+            document.getElementById('form-med-effect').value = m.effect || '';
+            document.getElementById('form-med-freq').value = m.freq || '';
+            document.getElementById('form-med-days').value = m.days || '28 日';
+            document.getElementById('form-med-start').value = m.start || '/';
+            document.getElementById('form-med-expiry').value = m.expiry || '/';
+            document.getElementById('form-med-remark').value = m.remark || '';
+        }
+        openModal('modal-med');
+    }
+
+    function saveMed() {
+        const data = {
+            member: document.getElementById('form-med-member').value,
+            name: document.getElementById('form-med-name').value.trim(),
+            effect: document.getElementById('form-med-effect').value.trim(),
+            freq: document.getElementById('form-med-freq').value.trim() || "每日 1 次",
+            days: document.getElementById('form-med-days').value.trim() || "28 日",
+            start: document.getElementById('form-med-start').value.trim() || "/",
+            expiry: document.getElementById('form-med-expiry').value.trim() || "/",
+            remark: document.getElementById('form-med-remark').value.trim()
+        };
+        const idx = document.getElementById('form-med-idx').value;
+        if(idx === '') {
+            state.meds.push(data);
+        } else {
+            state.meds[parseInt(idx)] = data;
+        }
+        closeModal('modal-med');
+        saveState();
+    }
+
+    function editMed(idx) { openMedModal(idx); }
+    function deleteMed(idx) {
+        if(confirm('肯定要刪除呢條藥物紀錄嗎？')) {
+            state.meds.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function renderHealth() {
+        const filter = document.getElementById('health-filter-select').value;
+        const tbody = document.getElementById('health-table-body');
+        tbody.innerHTML = '';
+
+        state.health.forEach((h, idx) => {
+            if(filter !== 'ALL' && h.member !== filter) return;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${h.member}</strong></td>
+                    <td>${h.datetime}</td>
+                    <td><span class="badge badge-warning">${h.type}</span></td>
+                    <td><strong style="color:var(--text-earth-dark); font-size:14px;">${h.value}</strong></td>
+                    <td>${h.pulse || '/'}</td>
+                    <td style="font-size:12px; color:var(--text-earth-muted);">${h.note || '-'}</td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editHealth(${idx})">✏️</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteHealth(${idx})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function openHealthModal(idx = null) {
+        populateDropdowns();
+        if(idx === null) {
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            
+            document.getElementById('health-modal-title').innerText = '➕ 新增日常健康紀錄';
+            document.getElementById('form-health-idx').value = '';
+            document.getElementById('form-health-datetime').value = timeStr;
+            document.getElementById('form-health-type').value = '血壓 (Blood Pressure)';
+            document.getElementById('form-health-value').value = '';
+            document.getElementById('form-health-pulse').value = '/';
+            document.getElementById('form-health-note').value = '';
+        } else {
+            const h = state.health[idx];
+            document.getElementById('health-modal-title').innerText = '✏️ 修改健康紀錄';
+            document.getElementById('form-health-idx').value = idx;
+            document.getElementById('form-health-member').value = h.member;
+            document.getElementById('form-health-datetime').value = h.datetime;
+            document.getElementById('form-health-type').value = h.type;
+            document.getElementById('form-health-value').value = h.value;
+            document.getElementById('form-health-pulse').value = h.pulse;
+            document.getElementById('form-health-note').value = h.note;
+        }
+        openModal('modal-health');
+    }
+
+    function saveHealth() {
+        const data = {
+            member: document.getElementById('form-health-member').value,
+            datetime: document.getElementById('form-health-datetime').value.trim(),
+            type: document.getElementById('form-health-type').value,
+            value: document.getElementById('form-health-value').value.trim(),
+            pulse: document.getElementById('form-health-pulse').value.trim(),
+            note: document.getElementById('form-health-note').value.trim()
+        };
+        const idx = document.getElementById('form-health-idx').value;
+        if(idx === '') {
+            state.health.push(data);
+        } else {
+            state.health[parseInt(idx)] = data;
+        }
+        closeModal('modal-health');
+        saveState();
+    }
+
+    function editHealth(idx) { openHealthModal(idx); }
+    function deleteHealth(idx) {
+        if(confirm('肯定要刪除呢條健康數據紀錄嗎？')) {
+            state.health.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function renderReports() {
+        const filter = document.getElementById('report-filter-select').value;
+        const tbody = document.getElementById('reports-table-body');
+        tbody.innerHTML = '';
+
+        state.reports.forEach((r, idx) => {
+            if(filter !== 'ALL' && r.member !== filter) return;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${r.member}</strong></td>
+                    <td>${r.date}</td>
+                    <td><strong style="color:var(--info-text);">${r.title}</strong></td>
+                    <td>${r.hospital}</td>
+                    <td style="font-size:12px; max-width:200px;">${r.summary}</td>
+                    <td><span class="badge badge-success">📂 ${r.location || '未標註'}</span></td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editReport(${idx})">✏️</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteReport(${idx})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function openReportModal(idx = null) {
+        populateDropdowns();
+        if(idx === null) {
+            document.getElementById('report-modal-title').innerText = '➕ 新增醫療化驗報告庫';
+            document.getElementById('form-report-idx').value = '';
+            document.getElementById('form-report-date').value = '';
+            document.getElementById('form-report-title').value = '';
+            document.getElementById('form-report-hospital').value = '';
+            document.getElementById('form-report-summary').value = '';
+            document.getElementById('form-report-location').value = '';
+        } else {
+            const r = state.reports[idx];
+            document.getElementById('report-modal-title').innerText = '✏️ 修改報告庫紀錄';
+            document.getElementById('form-report-idx').value = idx;
+            document.getElementById('form-report-member').value = r.member;
+            document.getElementById('form-report-date').value = r.date;
+            document.getElementById('form-report-title').value = r.title;
+            document.getElementById('form-report-hospital').value = r.hospital;
+            document.getElementById('form-report-summary').value = r.summary;
+            document.getElementById('form-report-location').value = r.location;
+        }
+        openModal('modal-report');
+    }
+
+    function saveReport() {
+        const data = {
+            member: document.getElementById('form-report-member').value,
+            date: document.getElementById('form-report-date').value.trim(),
+            title: document.getElementById('form-report-title').value.trim(),
+            hospital: document.getElementById('form-report-hospital').value.trim(),
+            summary: document.getElementById('form-report-summary').value.trim(),
+            location: document.getElementById('form-report-location').value.trim()
+        };
+        const idx = document.getElementById('form-report-idx').value;
+        if(idx === '') {
+            state.reports.push(data);
+        } else {
+            state.reports[parseInt(idx)] = data;
+        }
+        closeModal('modal-report');
+        saveState();
+    }
+
+    function editReport(idx) { openReportModal(idx); }
+    function deleteReport(idx) {
+        if(confirm('肯定要刪除呢條化驗報告紀錄嗎？')) {
+            state.reports.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function renderMens() {
+        const filter = document.getElementById('mens-filter-select').value;
+        const tbody = document.getElementById('mens-table-body');
+        tbody.innerHTML = '';
+
+        let list = state.mens.map((m, idx) => ({...m, originalIdx: idx}));
+        list.sort((a,b) => new Date(b.start) - new Date(a.start));
+
+        list.forEach(m => {
+            if(filter !== 'ALL' && m.member !== filter) return;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${m.member}</strong></td>
+                    <td>${m.start}</td>
+                    <td>${m.end || '<span style="color:#64748B; font-style:italic;">進行中...</span>'}</td>
+                    <td><span class="badge badge-info">${m.flow}</span></td>
+                    <td><span class="badge badge-warning">${m.pain}</span></td>
+                    <td style="font-size:12px; color:var(--text-earth-muted);">${m.note || '-'}</td>
+                    <td class="no-print">
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-capsule btn-edit" onclick="editMens(${m.originalIdx})">✏️</button>
+                            <button class="btn-capsule btn-danger" onclick="deleteMens(${m.originalIdx})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        calculateMensMetrics();
+    }
+
+    function calculateMensMetrics() {
+        const lastDateEl = document.getElementById('mens-stat-last-date');
+        const nextDateEl = document.getElementById('mens-stat-next-date');
+        const cycleEl = document.getElementById('mens-stat-cycle');
+
+        if(state.mens.length === 0) {
+            lastDateEl.innerText = '無紀錄';
+            nextDateEl.innerText = '無紀錄';
+            cycleEl.innerText = '無紀錄';
+            return;
+        }
+
+        let sorted = [...state.mens].sort((a,b) => new Date(a.start) - new Date(b.start));
+        let lastRecord = sorted[sorted.length - 1];
+
+        lastDateEl.innerText = lastRecord.start;
+
+        if(sorted.length >= 2) {
+            let totalDays = 0;
+            let count = 0;
+            for(let i = 1; i < sorted.length; i++) {
+                let diffTime = new Date(sorted[i].start) - new Date(sorted[i-1].start);
+                let diffDays = diffTime / (1000 * 60 * 60 * 24);
+                if(diffDays > 15 && diffDays < 45) {
+                    totalDays += diffDays;
+                    count++;
+                }
+            }
+            if(count > 0) {
+                let avgCycle = Math.round(totalDays / count);
+                cycleEl.innerText = `${avgCycle} 天`;
+
+                let lastStartDate = new Date(lastRecord.start);
+                lastStartDate.setDate(lastStartDate.getDate() + avgCycle);
+                let y = lastStartDate.getFullYear();
+                let m = String(lastStartDate.getMonth() + 1).padStart(2, '0');
+                let d = String(lastStartDate.getDate()).padStart(2, '0');
+                nextDateEl.innerText = `${y}-${m}-${d}`;
+            } else {
+                cycleEl.innerText = '28 天 (預設)';
+                let lastStartDate = new Date(lastRecord.start);
+                lastStartDate.setDate(lastStartDate.getDate() + 28);
+                let y = lastStartDate.getFullYear();
+                let m = String(lastStartDate.getMonth() + 1).padStart(2, '0');
+                let d = String(lastStartDate.getDate()).padStart(2, '0');
+                nextDateEl.innerText = `${y}-${m}-${d} *`;
+            }
+        } else {
+            cycleEl.innerText = '28 天 (預設)';
+            let lastStartDate = new Date(lastRecord.start);
+            lastStartDate.setDate(lastStartDate.getDate() + 28);
+            let y = lastStartDate.getFullYear();
+            let m = String(lastStartDate.getMonth() + 1).padStart(2, '0');
+            let d = String(lastStartDate.getDate()).padStart(2, '0');
+            nextDateEl.innerText = `${y}-${m}-${d} *`;
+        }
+    }
+
+    function openMensModal(idx = null) {
+        populateDropdowns();
+        if(idx === null) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('mens-modal-title').innerText = '➕ 紀錄生理經期';
+            document.getElementById('form-mens-idx').value = '';
+            document.getElementById('form-mens-start').value = todayStr;
+            document.getElementById('form-mens-end').value = '';
+            document.getElementById('form-mens-flow').value = '正常';
+            document.getElementById('form-mens-pain').value = '無痛';
+            document.getElementById('form-mens-note').value = '';
+        } else {
+            const m = state.mens[idx];
+            document.getElementById('mens-modal-title').innerText = '✏️ 修改生理期記錄';
+            document.getElementById('form-mens-idx').value = idx;
+            document.getElementById('form-mens-member').value = m.member;
+            document.getElementById('form-mens-start').value = m.start;
+            document.getElementById('form-mens-end').value = m.end || '';
+            document.getElementById('form-mens-flow').value = m.flow;
+            document.getElementById('form-mens-pain').value = m.pain;
+            document.getElementById('form-mens-note').value = m.note || '';
+        }
+        openModal('modal-mens');
+    }
+
+    function saveMens() {
+        const start = document.getElementById('form-mens-start').value;
+        if(!start) return alert('請選擇經期開始日期！');
+
+        const data = {
+            member: document.getElementById('form-mens-member').value,
+            start: start,
+            end: document.getElementById('form-mens-end').value || "",
+            flow: document.getElementById('form-mens-flow').value,
+            pain: document.getElementById('form-mens-pain').value,
+            note: document.getElementById('form-mens-note').value.trim()
+        };
+
+        const idx = document.getElementById('form-mens-idx').value;
+        if(idx === '') {
+            state.mens.push(data);
+        } else {
+            state.mens[parseInt(idx)] = data;
+        }
+        closeModal('modal-mens');
+        saveState();
+    }
+
+    function editMens(idx) { openMensModal(idx); }
+    function deleteMens(idx) {
+        if(confirm('肯定要刪除呢條生理期紀錄嗎？')) {
+            state.mens.splice(idx, 1);
+            saveState();
+        }
+    }
+
+    function initMemoTab() {
+        const mSelect = document.getElementById('memo-member-select');
+        mSelect.innerHTML = '';
+        state.family.forEach(f => {
+            mSelect.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+        });
+        generateMemoLetter();
+    }
+
+    function generateMemoLetter() {
+        const name = document.getElementById('memo-member-select').value;
+        if(!name) return;
+        
+        const f = state.family.find(item => item.name === name);
+        if(f) {
+            document.getElementById('letter-name').innerText = f.name;
+            document.getElementById('letter-eng-name').innerText = f.engName || '-';
+            document.getElementById('letter-birth').innerText = `${f.birth || '-'} (年齡: ${calculateAge(f.birth)})`;
+            document.getElementById('letter-hospital').innerText = f.hospital || '-';
+            document.getElementById('letter-allergies').innerText = f.allergies || '無已知藥物過敏 (NKDA)';
+        }
+
+        const cSelect = document.getElementById('memo-consult-select');
+        cSelect.innerHTML = '<option value="CUSTOM">-- 自訂 / 手寫預約資料 --</option>';
+        
+        const memberConsults = state.consults.filter(c => c.member === name && c.date !== '暫無');
+        memberConsults.forEach((c, idx) => {
+            cSelect.innerHTML += `<option value="${idx}">${c.date} | [${c.type || '覆診'}] ${c.dept}</option>`;
+        });
+        
+        const memberMeds = state.meds.filter(m => m.member === name);
+        const mTableBody = document.querySelector('#letter-meds-table tbody');
+        mTableBody.innerHTML = '';
+        
+        if(memberMeds.length === 0) {
+            mTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px;">目前未有登錄正服用的藥物清單。</td></tr>';
+        } else {
+            memberMeds.forEach(m => {
+                mTableBody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #C4C3B9; padding:6px; font-weight:700;">${m.name || '待填寫'}</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.effect || '-'}</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.freq || '-'} (${m.days || '28日'})</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px; font-size:12px; color:#444;">${m.remark || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+        populateMemoConsultInfo();
+    }
+
+    function populateMemoConsultInfo() {
+        const name = document.getElementById('memo-member-select').value;
+        const cSelect = document.getElementById('memo-consult-select').value;
+        const pDetails = document.getElementById('letter-appointment-details');
+        
+        if(cSelect === 'CUSTOM') {
+            pDetails.innerHTML = "📅 看診日期：______年____月____日  | 🕒 時間：________ | 🏥 醫院科別：__________________<br>🔁 睇診類別：__________ | ⏭️ 下次複診日：__________________<br><br>💡 看診前備忘事項：_____________________________________________________";
+        } else {
+            const memberConsults = state.consults.filter(c => c.member === name && c.date !== '暫無');
+            const c = memberConsults[parseInt(cSelect)];
+            if(c) {
+                pDetails.innerHTML = `📅 看診日期：<strong>${c.date}</strong> | 🕒 時間：<strong>${c.time}</strong> | 🏥 醫院科別：<strong>${c.dept}</strong><br>🔁 睇診類別：<strong>${c.type || '覆診'}</strong> | ⏭️ 下次複診日：<strong>${c.nextDate || '醫生未講/未填'}</strong><br><br>📝 看診前提示：${c.memo || '/'}`;
+            }
+        }
+    }
+
+    function toggleApiKeyConfig() {
+        const container = document.getElementById('api-key-input-container');
+        const icon = document.getElementById('api-drawer-icon');
+        if (container.style.display === 'none') {
+            container.style.display = 'flex';
+            icon.innerText = '▲';
+            const savedKey = localStorage.getItem('medApp_gemini_key');
+            if(savedKey) document.getElementById('gemini-api-key').value = savedKey;
+        } else {
+            container.style.display = 'none';
+            icon.innerText = '▼';
+        }
+    }
+
+    function saveApiKey() {
+        const key = document.getElementById('gemini-api-key').value.trim();
+        if(key) {
+            localStorage.setItem('medApp_gemini_key', key);
+            alert('🔑 API Key 已安全儲存於本地瀏覽器！');
+            toggleApiKeyConfig();
+        } else {
+            localStorage.removeItem('medApp_gemini_key');
+            alert('🔒 API Key 已被清除，系統將自動切換為本地智能引擎。');
+        }
+    }
+
+    function toggleAIPanel() {
+        const panel = document.getElementById('ai-panel');
+        if (panel.style.display === 'none' || panel.style.display === '') {
+            panel.style.display = 'flex';
+            runAIAudit();
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    function runAIAudit() {
+        const box = document.getElementById('ai-messages');
+        let alerts = [];
+        
+        state.family.forEach(f => {
+            if(!f.allergies || f.allergies.trim() === '' || f.allergies === '-' || f.allergies.includes('未填')) {
+                alerts.push("⚠️ <b>【醫護防護隱患】</b>屋企人 <b>" + f.name + "</b> 的藥物過敏歷史欄位未明確清晰登錄。");
+            }
+        });
+
+        state.consults.forEach(c => {
+            if((c.type === '覆診' || c.type === '初診') && c.date !== '暫無') {
+                if(!c.nextDate || c.nextDate === '/' || c.nextDate === '暫無' || c.nextDate.trim() === '') {
+                    alerts.push(`📅 <b>【預約追蹤提醒】</b><b>${c.member}</b> 喺 <b>${c.dept}</b> 嘅紀錄屬於 <i>${c.type}</i>，但「下次複診日期」仲係空白。`);
+                }
+            }
+        });
+
+        if (alerts.length > 0) {
+            box.innerHTML += `
+                <div style="background: #FFF5F5; color: var(--danger-text); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; border-left: 4px solid var(--danger-text); margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    🔍 <b>暖杏自動安全篩查報告：</b><br><br>
+                    ${alerts.map((a, i) => (i+1) + '. ' + a).join('<br><br>')}
+                </div>
+            `;
+        } else {
+            box.innerHTML += `
+                <div style="background: var(--success-bg); color: var(--success-text); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; border-left: 4px solid var(--success-text); margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                    ✅ <b>臨床掃描完畢：</b>目前所有已登記屋企人的數據運作流暢，無重大異常警示！
+                </div>
+            `;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendUserAIMsg() {
+        const input = document.getElementById('ai-input');
+        const txt = input.value.trim();
+        if (!txt) return;
+
+        const box = document.getElementById('ai-messages');
+        box.innerHTML += `<div style="background: var(--primary-amber); color: #fff; padding: 10px 14px; border-radius: 14px; align-self: flex-end; max-width: 85%; box-shadow: 0 2px 6px rgba(217,119,6,0.1); font-weight: 500;">${txt}</div>`;
+        input.value = '';
+        box.scrollTop = box.scrollHeight;
+
+        fallbackLocalReply(txt);
+    }
+
+    function fallbackLocalReply(txt) {
+        const box = document.getElementById('ai-messages');
+        setTimeout(() => {
+            let reply = "收到您的提問。系統內共有 " + state.consults.length + " 條複診預約，如果近期需要前往醫院，記住入埋「下次複診日期」，並善用系統的「備忘信」功能一鍵列印帶去同醫護對數。";
+            box.innerHTML += `<div style="background: #FFFFFF; border: 1px solid var(--border-warm); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">${reply}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }, 400);
+    }
+
+    function exportData() {
+        try {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "lka_medical_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        } catch (err) {
+            alert('❌ 導出備份失敗：' + err.message);
+        }
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedState = JSON.parse(e.target.result);
+                if (importedState && typeof importedState === 'object') {
+                    state = sanitizeState(importedState);
+                    saveState();
+                    alert('📥 成功匯入醫療數據備份！所有分頁已同步更新。');
+                } else {
+                    alert('❌ 匯入失敗：檔案格式不符合備份標準。');
+                }
+            } catch (err) {
+                alert('❌ 匯入解析錯誤，請確認上載的是有效的 JSON 備份檔案。');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        updateAllViews();
+        // 頁面載入時自動同步，具備防空覆蓋機制
+        syncCloudData(true);
+    });
+</script>
+</body>
+</html>
