@@ -502,7 +502,7 @@
         </div>
 
         <div class="med-card">
-            <div class="card-title">🔔 即將到臨的複診日程快報</div>
+            <div class="card-title">🔔 即將到臨的複診日程快報 (已自動按最近日期排序)</div>
             <div class="table-container">
                 <table id="dashboard-upcoming-table">
                     <thead>
@@ -1347,6 +1347,19 @@
         if (!s.mens || !Array.isArray(s.mens)) s.mens = defaultMens;
         if (!s.photos || !Array.isArray(s.photos)) s.photos = defaultPhotos;
         if (!s.sortOrder) s.sortOrder = 'asc';
+        
+        // 🔄 核心自動排序邏輯：所有複診資料寫入或載入時，自動按日期近至遠排序！
+        if(s.consults && Array.isArray(s.consults)) {
+            s.consults.sort((a, b) => {
+                if (a.date === '暫無' || a.date === '/') return 1;
+                if (b.date === '暫無' || b.date === '/') return -1;
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (isNaN(dateA)) return 1;
+                if (isNaN(dateB)) return -1;
+                return dateA - dateB;
+            });
+        }
         return s;
     }
 
@@ -1398,7 +1411,6 @@
                     saveState();
                     if(!silent) alert('☁️ 已成功由 Google Firebase 雲端同步最新紀錄！');
                 } else {
-                    // 雲端無資料時，自動將本地/預設數據上傳推送
                     database.ref('lka_medical_data').set(state);
                     if(!silent) alert('☁️ 雲端已自動上傳並備份你目前的完整醫療紀錄！');
                 }
@@ -2544,7 +2556,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         updateAllViews();
-        // 頁面載入時自動同步，具備防空覆蓋機制
         syncCloudData(true);
     });
 </script>
