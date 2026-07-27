@@ -447,6 +447,25 @@
             border-radius: 8px;
         }
 
+        /* 📸 OCR Toast 提示條樣式 */
+        #ocr-toast-status {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-earth-dark);
+            color: #FFFFFF;
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            align-items: center;
+            gap: 8px;
+        }
+
         @media print {
             body { background: #FFFFFF !important; padding: 0 !important; color: #000000 !important; }
             .bottom-nav-container, .app-header, .memo-selector-box, .no-print, th:last-child, td:last-child, #ai-floating-btn, #ai-panel { display: none !important; }
@@ -464,6 +483,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- 頂部 OCR 動態提示條 -->
+<div id="ocr-toast-status">
+    <span style="font-size:14px;">📷</span>
+    <span id="ocr-toast-text">AI 正在即時辨識相片文字，請稍候...</span>
+</div>
 
 <div class="app-container">
 
@@ -1281,7 +1306,6 @@
         measurementId: "G-ND2H70QGYV"
     };
 
-    // 初始化 Firebase
     let database = null;
     try {
         firebase.initializeApp(firebaseConfig);
@@ -1348,7 +1372,6 @@
         if (!s.photos || !Array.isArray(s.photos)) s.photos = defaultPhotos;
         if (!s.sortOrder) s.sortOrder = 'asc';
         
-        // 🔄 核心自動排序邏輯：所有複診資料寫入或載入時，自動按日期近至遠排序！
         if(s.consults && Array.isArray(s.consults)) {
             s.consults.sort((a, b) => {
                 if (a.date === '暫無' || a.date === '/') return 1;
@@ -1401,7 +1424,6 @@
         updateAllViews();
     }
 
-    // 自動同步 Firebase 雲端資料（防空資料覆蓋）
     function syncCloudData(silent = false) {
         if(database) {
             database.ref('lka_medical_data').once('value').then((snapshot) => {
@@ -1540,16 +1562,36 @@
         return clean;
     }
 
+    // 📸 無塞住提示條控制
+    function showOcrToast(msg) {
+        const toast = document.getElementById('ocr-toast-status');
+        const txt = document.getElementById('ocr-toast-text');
+        txt.innerText = msg;
+        toast.style.display = 'flex';
+    }
+
+    function hideOcrToast() {
+        document.getElementById('ocr-toast-status').style.display = 'none';
+    }
+
     function triggerOcrScan(targetType) {
         currentOcrTarget = targetType;
         document.getElementById('ocr-camera-input').click();
     }
 
+    // 📸 順暢自動加載 OCR 辨識流程
     async function processOcrImage(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        alert('📷 鏡頭已捕獲相片，AI 正在即時辨識文字中，請稍候...');
+        showOcrToast('📷 鏡頭已捕獲相片，AI 正在即時辨識文字中...');
+
+        // 立即彈出 Modal，唔洗呆等！
+        if (currentOcrTarget === 'med') {
+            openMedModal();
+        } else {
+            openConsultModal();
+        }
 
         try {
             const worker = await Tesseract.createWorker('eng+chi_tra');
@@ -1560,34 +1602,21 @@
             const cleanText = sanitizeOcrText(text);
 
             if (currentOcrTarget === 'med') {
-                openMedModal();
                 const drugName = extractDrugName(cleanText);
-                if (drugName) {
-                    document.getElementById('form-med-name').value = drugName;
-                }
-                if (cleanText) {
-                    document.getElementById('form-med-remark').value = "掃描文字：" + cleanText.substring(0, 100);
-                }
+                if (drugName) document.getElementById('form-med-name').value = drugName;
+                if (cleanText) document.getElementById('form-med-remark').value = "掃描文字：" + cleanText.substring(0, 100);
             } else {
-                openConsultModal();
                 const dept = extractHospitalDept(cleanText);
-                if (dept) {
-                    document.getElementById('form-consult-dept').value = dept;
-                }
-                if (cleanText) {
-                    document.getElementById('form-consult-memo').value = "掃描文字：" + cleanText.substring(0, 100);
-                }
+                if (dept) document.getElementById('form-consult-dept').value = dept;
+                if (cleanText) document.getElementById('form-consult-memo').value = "掃描文字：" + cleanText.substring(0, 100);
             }
 
-            if(cleanText) {
-                alert('✅ 辨識完成！系統已為您自動填入關鍵資訊。');
-            } else {
-                alert('📷 相片較模糊或光線不足，未成功擷取到文字，請直接手動填寫。');
-            }
+            showOcrToast('✅ 辨識完成！已為您填入關鍵數據。');
+            setTimeout(hideOcrToast, 2500);
 
         } catch (err) {
-            alert('📷 掃描辨識完成，請直接手動填寫資料。');
-            if (currentOcrTarget === 'med') openMedModal(); else openConsultModal();
+            showOcrToast('📷 辨識完成，請直接手動輸入內容。');
+            setTimeout(hideOcrToast, 2500);
         }
     }
 
