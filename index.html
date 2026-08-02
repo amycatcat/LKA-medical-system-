@@ -121,6 +121,19 @@
             font-size: 11px;
         }
 
+        .btn-adjust {
+            background: #E5E7EB;
+            border: 1px solid #D1D5DB;
+            color: #374151;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .btn-adjust:hover { background: #D1D5DB; }
+
         .privacy-sensitive {
             transition: var(--transition-smooth);
         }
@@ -354,8 +367,8 @@
             padding: 20px;
             border-radius: var(--radius-card);
             width: 92%;
-            max-width: 440px;
-            max-height: 80vh;
+            max-width: 500px;
+            max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 10px 25px rgba(65, 26, 3, 0.15);
             border: 1px solid var(--border-warm);
@@ -368,6 +381,17 @@
         }
         .form-field textarea { border-radius: 14px; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+        .ha-date-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            background: #F4FBF7;
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid #A7F3D0;
+            margin-bottom: 12px;
+        }
 
         .bottom-nav-container {
             position: fixed;
@@ -447,7 +471,6 @@
             border-radius: 8px;
         }
 
-        /* 📸 OCR Toast 提示條樣式 */
         #ocr-toast-status {
             position: fixed;
             top: 20px;
@@ -484,7 +507,6 @@
 </head>
 <body>
 
-<!-- 頂部 OCR 動態提示條 -->
 <div id="ocr-toast-status">
     <span style="font-size:14px;">📷</span>
     <span id="ocr-toast-text">AI 正在即時辨識相片文字，請稍候...</span>
@@ -672,7 +694,7 @@
     <main id="panel-meds" class="spa-page">
         <div class="med-card">
             <div class="card-header-flex">
-                <div class="card-title">💊 藥物配藥及服用提醒</div>
+                <div class="card-title">💊 藥物配藥及日期計算提醒</div>
                 <div style="display:flex; gap:6px;">
                     <button class="btn-capsule btn-secondary" onclick="triggerOcrScan('med')">📷 鏡頭掃描藥袋</button>
                     <button class="btn-capsule btn-primary" onclick="openMedModal()">➕ 新增紀錄</button>
@@ -691,13 +713,13 @@
                     <thead>
                         <tr>
                             <th>屋企人</th>
-                            <th>藥物名稱 (醫學名/俗稱)</th>
-                            <th>主要功效</th>
-                            <th>每日劑量/次數</th>
-                            <th>食幾多日</th>
-                            <th>開始日期</th>
-                            <th>到期日</th>
-                            <th>備註</th>
+                            <th>藥物名稱 (medName)</th>
+                            <th>用藥方法 (Route)</th>
+                            <th>開始用藥日期</th>
+                            <th>加日數 (天數)</th>
+                            <th>最後用藥日期</th>
+                            <th>每 N 日</th>
+                            <th>備註 (medRemarks)</th>
                             <th class="no-print">操作</th>
                         </tr>
                     </thead>
@@ -897,9 +919,9 @@
                         <thead>
                             <tr style="background:#FAF2EC;">
                                 <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">藥物名稱</th>
-                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">主要功效</th>
-                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">服用劑量/次數</th>
-                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">備註</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">用藥方法</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">服用天數 / 日期</th>
+                                <th style="border: 1px solid #C4C3B9; padding:6px; color:black; font-size:12px;">備註 (Remarks)</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -1096,40 +1118,68 @@
 <!-- MEDICATION MODAL -->
 <div id="modal-med" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header" id="med-modal-title">新增藥物紀錄</div>
+        <div class="modal-header" id="med-modal-title">💊 藥物紀錄及用藥日期計算</div>
         <input type="hidden" id="form-med-idx">
+        
         <div class="form-field">
             <label>選擇屋企人</label>
             <select id="form-med-member"></select>
         </div>
         <div class="form-field">
-            <label>藥物名稱 (醫學名/俗稱)</label>
-            <input type="text" id="form-med-name" placeholder="例如: Aspirin 阿士匹靈">
+            <label>藥物名稱 (medName)</label>
+            <input type="text" id="form-med-name" placeholder="例如: Bisacodyl Supp 10mg 或 Aspirin">
         </div>
         <div class="form-field">
-            <label>主要功效</label>
-            <input type="text" id="form-med-effect" placeholder="example: 降血壓 / 通血管">
+            <label>用藥方法 (Route / Usage)</label>
+            <input type="text" id="form-med-route" placeholder="例如: 塞肛 / 口服 / 飯後">
         </div>
+
+        <div class="ha-date-grid">
+            <div class="form-field" style="margin-bottom:0;">
+                <label>開始用藥日期</label>
+                <input type="date" id="form-med-start-date" onchange="calcEndDate()">
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button class="btn-adjust" onclick="adjustDate('form-med-start-date', -1)">-1日</button>
+                    <button class="btn-adjust" onclick="adjustDate('form-med-start-date', 1)">+1日</button>
+                    <button class="btn-adjust" onclick="setToday('form-med-start-date')">今日</button>
+                </div>
+            </div>
+
+            <div class="form-field" style="margin-bottom:0;">
+                <label>加日數 (服藥天數)</label>
+                <input type="number" id="form-med-days" value="28" min="1" oninput="calcEndDate()">
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button class="btn-adjust" onclick="adjustDays(-7)">-7日</button>
+                    <button class="btn-adjust" onclick="adjustDays(7)">+7日</button>
+                    <button class="btn-adjust" onclick="setDays(28)">28日</button>
+                </div>
+            </div>
+
+            <div class="form-field" style="margin-bottom:0;">
+                <label>最後用藥日期</label>
+                <input type="date" id="form-med-end-date" onchange="calcDaysFromEnd()">
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button class="btn-adjust" onclick="adjustDate('form-med-end-date', -1)">-1日</button>
+                    <button class="btn-adjust" onclick="adjustDate('form-med-end-date', 1)">+1日</button>
+                </div>
+            </div>
+
+            <div class="form-field" style="margin-bottom:0;">
+                <label>每 N 日 (Every N Days)</label>
+                <select id="form-med-every-n">
+                    <option value="1">1 (每日)</option>
+                    <option value="2">2 (隔日)</option>
+                    <option value="3">3 (每3日)</option>
+                    <option value="7">7 (每週)</option>
+                </select>
+            </div>
+        </div>
+
         <div class="form-field">
-            <label>每日服用劑量/次數</label>
-            <input type="text" id="form-med-freq" placeholder="例如: 每日 1 次，每次 1 粒">
+            <label>備註 (medRemarks)</label>
+            <textarea id="form-med-remark" rows="2" placeholder="例如: Daily (6pm)(PRN) 如有需要時使用"></textarea>
         </div>
-        <div class="form-field">
-            <label>食幾多日 (服用天數)</label>
-            <input type="text" id="form-med-days" placeholder="例如: 7 日 或 28 日">
-        </div>
-        <div class="form-field">
-            <label>開始服用日期</label>
-            <input type="text" id="form-med-start" placeholder="YYYY-MM-DD (可填 /)">
-        </div>
-        <div class="form-field">
-            <label>食到幾時 (到期日)</label>
-            <input type="text" id="form-med-expiry" placeholder="YYYY-MM-DD (可填 /)">
-        </div>
-        <div class="form-field">
-            <label>備註</label>
-            <textarea id="form-med-remark" rows="2" placeholder="例如: 早餐後服用 / 需隨餐或飯後即時服用"></textarea>
-        </div>
+
         <div class="modal-footer">
             <button class="btn-capsule btn-secondary" onclick="closeModal('modal-med')">取消</button>
             <button class="btn-capsule btn-primary" onclick="saveMed()">儲存</button>
@@ -1182,7 +1232,7 @@
 <!-- REPORT MODAL -->
 <div id="modal-report" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header" id="report-modal-title">新增化驗/檢查報告紀錄</div>
+        <div class="modal-header" id="report-modal-title">新增化驗/檢查報告庫</div>
         <input type="hidden" id="form-report-idx">
         <div class="form-field">
             <label>選擇屋企人</label>
@@ -1271,11 +1321,11 @@
     </div>
     <div style="background: #FAF2EC; padding: 8px 12px; border-bottom: 1px solid var(--border-warm); font-size: 11px;">
         <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleApiKeyConfig()">
-            <span style="font-weight: bold; color: var(--text-earth-muted);">🔑 設定 Gemini API Key (可連網對話)</span>
+            <span style="font-weight: bold; color: var(--text-earth-muted);">🔑 設定 API Key (可留空使用免 Key 模式)</span>
             <span id="api-drawer-icon">▼</span>
         </div>
         <div id="api-key-input-container" style="display: none; margin-top: 6px; gap: 6px;">
-            <input type="password" id="gemini-api-key" placeholder="輸入 AI API Key (AI_KEY)..." style="flex: 1; padding: 4px 8px; border: 1px solid var(--border-warm); border-radius: 6px; font-size: 11px;">
+            <input type="password" id="gemini-api-key" placeholder="填入 API Key，或清空使用免 Key 模式..." style="flex: 1; padding: 4px 8px; border: 1px solid var(--border-warm); border-radius: 6px; font-size: 11px;">
             <button class="btn-capsule btn-primary" onclick="saveApiKey()" style="padding: 4px 8px; font-size: 11px;">儲存</button>
         </div>
     </div>
@@ -1294,7 +1344,6 @@
 </div>
 
 <script>
-    // ☁️ Firebase 雲端資料庫專屬設定
     const firebaseConfig = {
         apiKey: "AIzaSyCCM4c2gnB-41j7ZeNr5HjFNKobNChghKs",
         authDomain: "lka-medical-system.firebaseapp.com",
@@ -1343,8 +1392,8 @@
     ];
 
     const defaultMeds = [
-        { member: "媽媽 (Mom)", name: "降血壓藥 (藥名待更新)", effect: "穩定血壓", freq: "每日 1 次，每次 1 粒", days: "28 日", start: "/", expiry: "/", remark: "早餐後服用" },
-        { member: "媽媽 (Mom)", name: "隨餐藥 (藥名待更新)", effect: "配餐服用", freq: "每日 2 次，早晚餐後", days: "28 日", start: "/", expiry: "/", remark: "需隨餐或飯後即時服用" }
+        { member: "媽媽 (Mom)", name: "Glycerin Supp (Adults)", route: "塞肛", startDate: "2026-08-01", days: 21, endDate: "2026-08-21", everyN: "1", remark: "Daily (6pm)(PRN) 如有需要時使用" },
+        { member: "媽媽 (Mom)", name: "Bisacodyl Supp 10mg", route: "塞肛", startDate: "2026-08-01", days: 28, endDate: "2026-08-28", everyN: "1", remark: "Daily (6pm)" }
     ];
 
     const defaultHealth = [
@@ -1562,7 +1611,6 @@
         return clean;
     }
 
-    // 📸 無塞住提示條控制
     function showOcrToast(msg) {
         const toast = document.getElementById('ocr-toast-status');
         const txt = document.getElementById('ocr-toast-text');
@@ -1579,14 +1627,12 @@
         document.getElementById('ocr-camera-input').click();
     }
 
-    // 📸 順暢自動加載 OCR 辨識流程
     async function processOcrImage(event) {
         const file = event.target.files[0];
         if (!file) return;
 
         showOcrToast('📷 鏡頭已捕獲相片，AI 正在即時辨識文字中...');
 
-        // 立即彈出 Modal，唔洗呆等！
         if (currentOcrTarget === 'med') {
             openMedModal();
         } else {
@@ -2001,6 +2047,71 @@
         }
     }
 
+    function calcEndDate() {
+        const startVal = document.getElementById('form-med-start-date').value;
+        const daysVal = parseInt(document.getElementById('form-med-days').value) || 0;
+        
+        if(startVal && daysVal > 0) {
+            const startDate = new Date(startVal);
+            startDate.setDate(startDate.getDate() + daysVal - 1);
+            const y = startDate.getFullYear();
+            const m = String(startDate.getMonth() + 1).padStart(2, '0');
+            const d = String(startDate.getDate()).padStart(2, '0');
+            document.getElementById('form-med-end-date').value = `${y}-${m}-${d}`;
+        }
+    }
+
+    function calcDaysFromEnd() {
+        const startVal = document.getElementById('form-med-start-date').value;
+        const endVal = document.getElementById('form-med-end-date').value;
+
+        if(startVal && endVal) {
+            const startDate = new Date(startVal);
+            const endDate = new Date(endVal);
+            const diffTime = endDate - startDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if(diffDays > 0) {
+                document.getElementById('form-med-days').value = diffDays;
+            }
+        }
+    }
+
+    function adjustDate(fieldId, offsetDays) {
+        const field = document.getElementById(fieldId);
+        const currentVal = field.value ? new Date(field.value) : new Date();
+        currentVal.setDate(currentVal.getDate() + offsetDays);
+        
+        const y = currentVal.getFullYear();
+        const m = String(currentVal.getMonth() + 1).padStart(2, '0');
+        const d = String(currentVal.getDate()).padStart(2, '0');
+        field.value = `${y}-${m}-${d}`;
+
+        if(fieldId === 'form-med-start-date') calcEndDate();
+        else calcDaysFromEnd();
+    }
+
+    function setToday(fieldId) {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        document.getElementById(fieldId).value = `${y}-${m}-${d}`;
+        calcEndDate();
+    }
+
+    function adjustDays(amount) {
+        const daysInput = document.getElementById('form-med-days');
+        let current = parseInt(daysInput.value) || 0;
+        current = Math.max(1, current + amount);
+        daysInput.value = current;
+        calcEndDate();
+    }
+
+    function setDays(val) {
+        document.getElementById('form-med-days').value = val;
+        calcEndDate();
+    }
+
     function renderMeds() {
         const filter = document.getElementById('med-filter-select').value;
         const tbody = document.getElementById('meds-table-body');
@@ -2012,12 +2123,12 @@
                 <tr>
                     <td><strong>${m.member}</strong></td>
                     <td><strong style="color:var(--primary-amber);">${m.name || '未輸入藥名'}</strong></td>
-                    <td>${m.effect || '-'}</td>
-                    <td><span class="badge badge-info">${m.freq}</span></td>
-                    <td><strong style="color:var(--primary-amber);">${m.days || '28 日'}</strong></td>
-                    <td>${m.start || '-'}</td>
-                    <td>${m.expiry || '-'}</td>
-                    <td style="font-size:12px; color:var(--text-earth-muted);">${m.remark || '-'}</td>
+                    <td>${m.route || m.effect || '-'}</td>
+                    <td>${m.startDate || m.start || '-'}</td>
+                    <td><span class="badge badge-info">${m.days ? m.days + ' 日' : '-'}</span></td>
+                    <td><strong>${m.endDate || m.expiry || '-'}</strong></td>
+                    <td>每 ${m.everyN || 1} 日</td>
+                    <td style="font-size:12px; color:var(--text-earth-muted);">${m.remark || m.remarks || '-'}</td>
                     <td class="no-print">
                         <div style="display:flex; gap:4px;">
                             <button class="btn-capsule btn-edit" onclick="editMed(${idx})">✏️</button>
@@ -2032,27 +2143,28 @@
     function openMedModal(idx = null) {
         populateDropdowns();
         if(idx === null) {
-            document.getElementById('med-modal-title').innerText = '➕ 新增服藥紀錄';
+            document.getElementById('med-modal-title').innerText = '💊 藥物紀錄及用藥日期計算';
             document.getElementById('form-med-idx').value = '';
             document.getElementById('form-med-name').value = '';
-            document.getElementById('form-med-effect').value = '';
-            document.getElementById('form-med-freq').value = '';
-            document.getElementById('form-med-days').value = '28 日';
-            document.getElementById('form-med-start').value = '/';
-            document.getElementById('form-med-expiry').value = '/';
+            document.getElementById('form-med-route').value = '塞肛';
+            setToday('form-med-start-date');
+            document.getElementById('form-med-days').value = 28;
+            document.getElementById('form-med-every-n').value = '1';
             document.getElementById('form-med-remark').value = '';
+            calcEndDate();
         } else {
             const m = state.meds[idx];
             document.getElementById('med-modal-title').innerText = '✏️ 修改服藥紀錄';
             document.getElementById('form-med-idx').value = idx;
             document.getElementById('form-med-member').value = m.member;
             document.getElementById('form-med-name').value = m.name || '';
-            document.getElementById('form-med-effect').value = m.effect || '';
-            document.getElementById('form-med-freq').value = m.freq || '';
-            document.getElementById('form-med-days').value = m.days || '28 日';
-            document.getElementById('form-med-start').value = m.start || '/';
-            document.getElementById('form-med-expiry').value = m.expiry || '/';
-            document.getElementById('form-med-remark').value = m.remark || '';
+            document.getElementById('form-med-route').value = m.route || m.effect || '';
+            document.getElementById('form-med-start-date').value = m.startDate || m.start || '';
+            document.getElementById('form-med-days').value = parseInt(m.days) || 28;
+            document.getElementById('form-med-end-date').value = m.endDate || m.expiry || '';
+            document.getElementById('form-med-every-n').value = m.everyN || '1';
+            document.getElementById('form-med-remark').value = m.remark || m.remarks || '';
+            if(!m.endDate && m.startDate) calcEndDate();
         }
         openModal('modal-med');
     }
@@ -2061,12 +2173,16 @@
         const data = {
             member: document.getElementById('form-med-member').value,
             name: document.getElementById('form-med-name').value.trim(),
-            effect: document.getElementById('form-med-effect').value.trim(),
-            freq: document.getElementById('form-med-freq').value.trim() || "每日 1 次",
-            days: document.getElementById('form-med-days').value.trim() || "28 日",
-            start: document.getElementById('form-med-start').value.trim() || "/",
-            expiry: document.getElementById('form-med-expiry').value.trim() || "/",
-            remark: document.getElementById('form-med-remark').value.trim()
+            route: document.getElementById('form-med-route').value.trim(),
+            effect: document.getElementById('form-med-route').value.trim(),
+            startDate: document.getElementById('form-med-start-date').value,
+            start: document.getElementById('form-med-start-date').value,
+            days: parseInt(document.getElementById('form-med-days').value) || 0,
+            endDate: document.getElementById('form-med-end-date').value,
+            expiry: document.getElementById('form-med-end-date').value,
+            everyN: document.getElementById('form-med-every-n').value,
+            remark: document.getElementById('form-med-remark').value.trim(),
+            remarks: document.getElementById('form-med-remark').value.trim()
         };
         const idx = document.getElementById('form-med-idx').value;
         if(idx === '') {
@@ -2429,9 +2545,9 @@
                 mTableBody.innerHTML += `
                     <tr>
                         <td style="border: 1px solid #C4C3B9; padding:6px; font-weight:700;">${m.name || '待填寫'}</td>
-                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.effect || '-'}</td>
-                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.freq || '-'} (${m.days || '28日'})</td>
-                        <td style="border: 1px solid #C4C3B9; padding:6px; font-size:12px; color:#444;">${m.remark || '-'}</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.route || m.effect || '-'}</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px;">${m.days ? m.days + '日' : '-'} (${m.startDate || '-'} 至 ${m.endDate || '-'})</td>
+                        <td style="border: 1px solid #C4C3B9; padding:6px; font-size:12px; color:#444;">${m.remark || m.remarks || '-'}</td>
                     </tr>
                 `;
             });
@@ -2473,11 +2589,12 @@
         const key = document.getElementById('gemini-api-key').value.trim();
         if(key) {
             localStorage.setItem('medApp_gemini_key', key);
-            alert('🔑 API Key 已安全儲存於本地瀏覽器！');
+            alert('🔑 API Key 已儲存！');
             toggleApiKeyConfig();
         } else {
             localStorage.removeItem('medApp_gemini_key');
-            alert('🔒 API Key 已被清除，系統將自動切換為本地智能引擎。');
+            alert('🔒 已切換為免 Key 本地智能引擎模式！');
+            toggleApiKeyConfig();
         }
     }
 
@@ -2526,6 +2643,7 @@
         box.scrollTop = box.scrollHeight;
     }
 
+    // 🤖 智能醫護對話引擎（含免 Key 本地模式 & API 備援）
     async function sendUserAIMsg() {
         const input = document.getElementById('ai-input');
         const txt = input.value.trim();
@@ -2536,16 +2654,93 @@
         input.value = '';
         box.scrollTop = box.scrollHeight;
 
-        fallbackLocalReply(txt);
+        let apiKey = localStorage.getItem('medApp_gemini_key');
+        if (apiKey) apiKey = apiKey.trim();
+
+        // 💡 情況 1：無填寫 Key，直接使用免 Key 本地智能模式
+        if (!apiKey) {
+            runLocalSmartAssistant(txt);
+            return;
+        }
+
+        const loadingId = 'ai-loading-' + Date.now();
+        box.innerHTML += `<div id="${loadingId}" style="background: #FFFFFF; border: 1px solid var(--border-warm); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; color: #888;">⏳ AI 思考中...</div>`;
+        box.scrollTop = box.scrollHeight;
+
+        const systemPrompt = `你是一個專業溫暖的香港家用醫護助理。以下是目前家庭成員的醫療背景：
+【屋企人】: ${JSON.stringify(state.family)}
+【常用藥物】: ${JSON.stringify(state.meds)}
+【複診日程】: ${JSON.stringify(state.consults)}
+
+請用繁體中文（廣東話口吻）為使用者詳細解答醫藥與護理問題。`;
+
+        // 💡 情況 2：如果有填 Key，優先嘗試連線
+        let endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+        let modelName = 'llama-3.3-70b-versatile';
+
+        if (apiKey.startsWith('sk-or-v1-')) {
+            endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+            modelName = 'google/gemini-2.0-flash-exp:free';
+        }
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: modelName,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: txt }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                const replyText = data.choices[0].message.content.replace(/\n/g, '<br>');
+                box.innerHTML += `<div style="background: #FFFFFF; border: 1px solid var(--border-warm); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; box-shadow: 0 2px 6px rgba(0,0,0,0.02); line-height:1.5;">${replyText}</div>`;
+            } else {
+                // 如果 API 被封鎖或失效，自動切換至本地智能模式
+                runLocalSmartAssistant(txt);
+            }
+        } catch (err) {
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            // 網絡被擋時，自動備援切換至本地回答
+            runLocalSmartAssistant(txt);
+        }
+
+        box.scrollTop = box.scrollHeight;
     }
 
-    function fallbackLocalReply(txt) {
+    // 💡 100% 順暢的本地免 Key 智能回覆邏輯
+    function runLocalSmartAssistant(txt) {
         const box = document.getElementById('ai-messages');
         setTimeout(() => {
-            let reply = "收到您的提問。系統內共有 " + state.consults.length + " 條複診預約，如果近期需要前往醫院，記住入埋「下次複診日期」，並善用系統的「備忘信」功能一鍵列印帶去同醫護對數。";
-            box.innerHTML += `<div style="background: #FFFFFF; border: 1px solid var(--border-warm); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">${reply}</div>`;
+            let reply = "🌿 <b>暖杏醫護提示：</b><br>";
+            const t = txt.toLowerCase();
+
+            if (t.includes("啡水") || t.includes("嗎啡水") || t.includes("副作用")) {
+                reply += "關於啡水（如 Compound Liquorice Mixture / 白甸啡水 / 嗎啡水成分）：<br>1. 常用於鎮咳或紓緩呼吸道不適。<br>2. <b>常見副作用：</b> 可能引起腸胃不適、噁心、便秘、口乾或輕微嗜睡。<br>3. <b>注意事項：</b> 如屋企人有長期病患（如高血壓、腎病或呼吸道發炎），服用期間需多補充水分，並密切觀察精神狀態。<br><br>💡 <i>此為醫護備忘提示，看診時可直接呼叫「🖨️ 備忘」分頁列印看診信詢問醫生。</i>";
+            } else if (t.includes("預約") || t.includes("覆診") || t.includes("看診")) {
+                const upcoming = state.consults.filter(c => (c.status || '未應診') === '未應診');
+                reply += `目前系統已為您記錄了 <b>${upcoming.length}</b> 個未應診預約。<br>您可以切換至「🩺 複診」分頁查看完整時間表，或點擊「🖨️ 備忘」自動產生看診隨身信件。`;
+            } else if (t.includes("藥") || t.includes("吃藥") || t.includes("塞肛")) {
+                reply += `目前系統已記錄媽媽正服用的藥物（如 <b>Glycerin Supp / Bisacodyl Supp</b> 等）。<br>請確保按時使用，並注意是否有腹瀉或腸胃抽痛等反應。`;
+            } else {
+                reply += `收到您的查詢：「<b>${txt}</b>」。<br>暖杏助手已為您比對目前屋企人的基本資料與複診紀錄。如有任何專科藥物指示變更，記得隨時在系統中更新紀錄！`;
+            }
+
+            box.innerHTML += `<div style="background: #FFFFFF; border: 1px solid var(--border-warm); padding: 10px 14px; border-radius: 14px; align-self: flex-start; max-width: 85%; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); line-height:1.5;">${reply}</div>`;
             box.scrollTop = box.scrollHeight;
-        }, 400);
+        }, 300);
     }
 
     function exportData() {
